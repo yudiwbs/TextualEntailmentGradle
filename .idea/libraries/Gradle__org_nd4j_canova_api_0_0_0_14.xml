@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.nd4j:canova-api:0.0.0.14">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.nd4j/canova-api/0.0.0.14/79f1a9a3a73123ec39b7038ec23ada6798c0a064/canova-api-0.0.0.14.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.nd4j/canova-api/0.0.0.14/c331ed8f39a00d811e8faf391f97aa65964e0ffd/canova-api-0.0.0.14-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

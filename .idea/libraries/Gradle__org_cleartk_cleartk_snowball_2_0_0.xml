@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.cleartk:cleartk-snowball:2.0.0">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.cleartk/cleartk-snowball/2.0.0/e701fb06334bf47b8325338aa56c2e65f79023f3/cleartk-snowball-2.0.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.cleartk/cleartk-snowball/2.0.0/2559af80d21cb82773b0a71e97f78a18992e171f/cleartk-snowball-2.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

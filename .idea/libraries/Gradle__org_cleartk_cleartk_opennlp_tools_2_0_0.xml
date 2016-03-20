@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.cleartk:cleartk-opennlp-tools:2.0.0">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.cleartk/cleartk-opennlp-tools/2.0.0/c886bc24618bb694d266f4e2e76a2648dd0808fe/cleartk-opennlp-tools-2.0.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.cleartk/cleartk-opennlp-tools/2.0.0/7a606cfe9bae393eca856a5527575f53e2180690/cleartk-opennlp-tools-2.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

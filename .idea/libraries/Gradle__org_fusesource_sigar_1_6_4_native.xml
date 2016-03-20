@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.fusesource:sigar:1.6.4:native">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.fusesource/sigar/1.6.4/9b481573ea030787c487da3a8e2d89ba757371b5/sigar-1.6.4-native.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.fusesource/sigar/1.6.4/6ec206dc7219e755c239d576b1da36fc1234aed8/sigar-1.6.4-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

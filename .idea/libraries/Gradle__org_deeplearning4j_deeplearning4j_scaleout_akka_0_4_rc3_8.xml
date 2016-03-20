@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.deeplearning4j:deeplearning4j-scaleout-akka:0.4-rc3.8">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.deeplearning4j/deeplearning4j-scaleout-akka/0.4-rc3.8/4ae9285c95f8068173ae029e4a97a9f6eb30cb8b/deeplearning4j-scaleout-akka-0.4-rc3.8.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.deeplearning4j/deeplearning4j-scaleout-akka/0.4-rc3.8/32a3e30792b52aa1ba4bfe2287267ab2641cfc14/deeplearning4j-scaleout-akka-0.4-rc3.8-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.deeplearning4j:deeplearning4j-scaleout-api:0.4-rc3.8">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.deeplearning4j/deeplearning4j-scaleout-api/0.4-rc3.8/7e6ee24601cfae760e7514e8d45c7576522b8f02/deeplearning4j-scaleout-api-0.4-rc3.8.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.deeplearning4j/deeplearning4j-scaleout-api/0.4-rc3.8/4ba412f58a1d744e8891bdcb4efb08cbc3e5e590/deeplearning4j-scaleout-api-0.4-rc3.8-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
