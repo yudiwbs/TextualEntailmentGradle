@@ -26,7 +26,6 @@ import java.sql.ResultSet;
 public class IsiWord2VecVerbNoun {
     public String namaTabel;
     private Connection conn = null;
-
     private PreparedStatement pUpd = null;
     private PreparedStatement pSel = null;
 
@@ -34,8 +33,9 @@ public class IsiWord2VecVerbNoun {
     Prepro pp;
     WordVectors vec  = null;
 
-    public void init(String lokasiFile) {
+    public void init(String lokasiFile, String vnamaTabel) {
 
+        namaTabel = vnamaTabel;
         KoneksiDB db = new KoneksiDB();
         pp = new Prepro();
         pp.loadStopWords("stopwords","kata");
@@ -54,7 +54,7 @@ public class IsiWord2VecVerbNoun {
             ex.printStackTrace();
         }
 
-
+        /*
         File gModel = new File(lokasiFile);
         try {
             System.out.println("Mulai Load, akan lama (4 menitan)...");
@@ -63,6 +63,7 @@ public class IsiWord2VecVerbNoun {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+        */
     }
 
     @Override
@@ -84,10 +85,8 @@ public class IsiWord2VecVerbNoun {
     }
 
     public void proses() {
-
         rs = null;
         try {
-
             rs = pSel.executeQuery();
             while (rs.next()) {
                 //id,t,h, t_gram_structure, h_gram_structure
@@ -96,8 +95,6 @@ public class IsiWord2VecVerbNoun {
                 String h = rs.getString(3);
                 String tSynTree = rs.getString(4);
                 String hSynTree = rs.getString(5);
-
-
 
                 System.out.println("id:"+id);
                 System.out.println("T:"+t);
@@ -111,19 +108,20 @@ public class IsiWord2VecVerbNoun {
 
                 //cari pasangaan kedekatan semua verb H - verb T
                 //cari pasangaan kedekatan semua noun H - noun T
-                //cari pasangaan kedekatan semua verb H - verb T
+                //cari pasangaan kedekatan semua verb H - noun T T
 
                 //skor_word2vec_verb,skor_word2vec_noun,skor_word2vec_verbHnounT
 
                 //cari skor antara VH dan VT
 
-                //verb dengan verb
+                //verb dengan verb.
+
                 StringBuilder sbVerb = new StringBuilder();
                 for (String vH:hPrepro.alVerb) {
                     for (String vT:tPrepro.alVerb) {
                         double skor = vec.similarity(vH, vT);
                         sbVerb.append(vH);sbVerb.append(":");sbVerb.append(vT);
-                        sbVerb.append(":");sbVerb.append(skor);sbVerb.append(",");
+                        sbVerb.append(":");sbVerb.append(skor);sbVerb.append("|");
                     }
                 }
 
@@ -133,7 +131,7 @@ public class IsiWord2VecVerbNoun {
                     for (String vT:tPrepro.alNoun) {
                         double skor = vec.similarity(vH, vT);
                         sbNoun.append(vH);sbNoun.append(":");sbNoun.append(vT);
-                        sbNoun.append(":");sbNoun.append(skor);sbNoun.append(",");
+                        sbNoun.append(":");sbNoun.append(skor);sbNoun.append("|");
                     }
                 }
 
@@ -143,11 +141,9 @@ public class IsiWord2VecVerbNoun {
                     for (String vT:tPrepro.alNoun) {
                         double skor = vec.similarity(vH, vT);
                         sbVerbNoun.append(vH);sbVerbNoun.append(":");sbVerbNoun.append(vT);
-                        sbVerbNoun.append(":");sbVerbNoun.append(skor);sbVerbNoun.append(",");
+                        sbVerbNoun.append(":");sbVerbNoun.append(skor);sbVerbNoun.append("|");
                     }
                 }
-
-
 
 
                 //skor_word2vec_verb,skor_word2vec_noun,skor_word2vec_verbHnounT
@@ -169,8 +165,10 @@ public class IsiWord2VecVerbNoun {
 
     public static void main(String[] args) {
         IsiWord2VecVerbNoun iw = new IsiWord2VecVerbNoun();
-        iw.namaTabel ="rte3_babak2";
-        iw.init("D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz");
+        //iw.namaTabel ="rte3_babak2";
+        //iw.namaTabel ="rte3_test_gold";
+        iw.init("D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz",
+                "rte3_babak2");
         iw.proses();
         iw.close();
     }

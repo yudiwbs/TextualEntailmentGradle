@@ -1,14 +1,19 @@
 package edu.upi.cs.yudiwbs.textualentailment.babakempat;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.util.CoreMap;
+
 import java.io.*;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.sql.*;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 
 /**
@@ -24,6 +29,142 @@ public class Prepro {
     public String userName;
     public String password;
     private ArrayList<String> alStopWords = new ArrayList<>();
+
+    private StanfordCoreNLP pipeline;
+
+
+    //kalau dapat error
+    //Unrecoverable error while loading a tagger model
+    // Unable to resolve "edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger"
+
+    public void initLemma() {
+        Properties props = new Properties();
+        props.put("annotators", "tokenize, ssplit, pos, lemma");
+        pipeline = new StanfordCoreNLP(props);
+    }
+
+    //IS: init lema sudah dipangggil!
+    public String lemmatize(String documentText)
+    {
+        assert (pipeline!=null); //pastikan init sudah dipanggil
+        List<String> lemmas = new LinkedList<>();
+        // create an empty Annotation just with the given text
+        Annotation document = new Annotation(documentText);
+        // run all Annotators on this text
+        this.pipeline.annotate(document);
+
+        // Iterate over all of the sentences found
+        List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
+        for(CoreMap sentence: sentences) {
+            // Iterate over all tokens in a sentence
+            for (CoreLabel token: sentence.get(CoreAnnotations.TokensAnnotation.class)) {
+                lemmas.add(token.get(CoreAnnotations.LemmaAnnotation.class));
+            }
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (String s:lemmas) {
+            sb.append(s+" ");
+        }
+        String out = sb.toString();
+        //out = td.postProses(out);
+        return out;
+    }
+
+    /*
+        ambil jenis: "DATE", "NUMBER", "MONEY"
+
+     */
+    ArrayList<String> ambilSatuJenisNER(String jenis,String ner) {
+        ArrayList<String> out = new ArrayList<>();
+        HashMap<String,ArrayList<String>> hmTNer = ambilInfoNer(ner);
+        for (String key : hmTNer.keySet()) {
+            //filter key yg diinginkan
+            if (key.equals(jenis)) {
+                //ambil datanya
+                ArrayList<String> alData = hmTNer.get(key);
+                if (alData!=null) {
+                    for (String s : alData) {
+                        out.add(s);
+                    }
+                }
+            }
+        }
+        return out;
+    }
+
+
+
+
+    /*
+       ambil info ner dari database. Contoh inputnya: ORGANIZATION=Yukos;MONEY=US$ 27.5 billion;
+       ORGANIZATION=Yuganskneftegaz;MONEY=US$ 9.4 billion;MISC=Baikalfinansgroup;MISC=Russian;ORGANIZATION=Rosneft;
+       ORGANIZATION, MISC, DATE adalah key
+       satu key bisa punya lebih dari satu value, disimpan di ArrayList
+
+       contoh penggunaan:
+       HashMap<String,ArrayList<String>> hmNer = pp.ambilInfoNer(ner);
+       for (String key : hmNer.keySet()) {
+            //filter key yg diinginkan
+            if (  key.equals("PERSON") ||
+                    key.equals("ORGANIZATION" )  ||
+                    key.equals("LOCATION")  ) {
+
+                //ambil datanya
+                ArrayList<String> al = hmNer.get(key);
+                for (String s:al) {
+                }
+
+    */
+
+    public HashMap<String,ArrayList<String>> ambilInfoNer (String s) {
+        HashMap<String,ArrayList<String>> out = new HashMap<>();
+        Scanner sc = new Scanner(s);
+        sc.useDelimiter(";");
+        while (sc.hasNext()) {
+            String kata = sc.next();
+            String[] arrKata = kata.split("=");
+            if (out.containsKey(arrKata[0])) {
+                //sudah ada
+                ArrayList<String> al = out.get(arrKata[0]);
+                al.add(arrKata[1]);
+            } else {
+                ArrayList<String> al = new ArrayList<>();
+                al.add(arrKata[1]);
+                out.put(arrKata[0],al);
+            }
+        }
+        return out;
+    }
+
+
+    //loadstopwords harus dipanggil terlebih dulu!!
+    //hanya huruf yang diterima
+    public ArrayList<String> loadKataTanpaStopWords(String str,boolean keLowerCase,boolean buangSelainHuruf) {
+        assert (alStopWords.size()>0); //pastikan stopwords sudah diload
+        ArrayList<String> out = new  ArrayList<String>();
+        String str2;
+        if (buangSelainHuruf) {
+            //buang selaing alphanumerik
+            //underscore dibiarkan krn berguna untuk word2vec
+            str2 = str.replaceAll("[^A-Za-z_\\-]", " ").replaceAll("\\s+", " ").trim();
+        } else {
+            str2 = str; //tidak dibbuang
+        }
+        Scanner sc = new Scanner(str2);
+        while (sc.hasNext()) {
+            String kata = sc.next().trim();
+            if (keLowerCase) {
+                kata = kata.toLowerCase();
+            }
+            if (!alStopWords.contains(kata.toLowerCase())) {
+                if (kata.length()>1) { //satu kar dibuang
+                    out.add(kata);
+                }
+            }
+        }
+        return out;
+    }
 
     public void loadStopWords(String namaTabel,String namaField) {
         //memindahkan data stopwords dari tabel ke memori alStopWords
@@ -59,7 +200,8 @@ public class Prepro {
         }
     }
 
-       public void fileStopwordsToDB(String fileName,String tableName,String fieldName) {
+    //utility
+    public void fileStopwordsToDB(String fileName,String tableName,String fieldName) {
               //fieldname: nama field di tabel stopwords
 
               //utility memindahkan isi file teks ke tabel
@@ -210,9 +352,124 @@ public class Prepro {
            return out;
        }
 
+    /*
+        token2 ini mungkin nanti dipisahkan ke kelas lain aja ya
+    */
+    public Object[] ambilTokenUang(String kal, String ner) {
+        Object[] out = new Object[2];
+        ArrayList<String> alToken = ambilSatuJenisNER("MONEY",ner);
+        out[0] = alToken;
+
+        //buang dari kalimat
+        //perlu buang yg panjang lebih dulu
+        //misal: August of 1799 harus dibuang duluan sebelum 1799
+        //kalau terbalik maka akan ada sisa August of
+        //mungkin harusnya ambil informasi posisi dari lib stanfordnya langsung lebih elegan
+        ComparatorPanjangKalimat comparator = new ComparatorPanjangKalimat(false);
+        java.util.Collections.sort(alToken, comparator);
+        for (String t:alToken) {
+            kal = kal.replaceAll(Pattern.quote(t),"");
+        }
+        out [1] = kal;
+        return out;
+    }
+
+    /*
+         token2 ini mungkin nanti dipisahkan ke kelas lain aja ya
+     */
+    public Object[] ambilTokenAngka(String kal, String ner) {
+        Object[] out = new Object[2];
+        ArrayList<String> alToken = ambilSatuJenisNER("NUMBER",ner);
+        out[0] = alToken;
+
+        //buang dari kalimat
+        //perlu buang yg panjang lebih dulu
+        //misal: August of 1799 harus dibuang duluan sebelum 1799
+        //kalau terbalik maka akan ada sisa August of
+        //mungkin harusnya ambil informasi posisi dari lib stanfordnya langsung lebih elegan
+        ComparatorPanjangKalimat comparator = new ComparatorPanjangKalimat(false);
+        java.util.Collections.sort(alToken, comparator);
+        for (String t:alToken) {
+            kal = kal.replaceAll(Pattern.quote(t),"");
+        }
+        out [1] = kal;
+        return out;
+    }
+
+
+
+    /*
+        berdasarkan kalimat dan ner, ambil token tanggal,
+        lalu buang token tersebut dari kalimat
+        output : [0] ArrayList<String>  berisi token
+                 [1] String kalimat sisa
+
+     */
+    public Object[] ambilTokenTgl(String kal, String ner) {
+        Object[] out = new Object[2];
+        ArrayList<String> alToken = ambilSatuJenisNER("DATE",ner);
+        out[0] = alToken;
+
+        //buang dari kalimat
+        //perlu buang yg panjang lebih dulu
+        //misal: August of 1799 harus dibuang duluan sebelum 1799
+        //kalau terbalik maka akan ada sisa August of
+
+        ComparatorPanjangKalimat comparator = new ComparatorPanjangKalimat(false);
+
+        java.util.Collections.sort(alToken, comparator);
+
+        for (String t:alToken) {
+            kal = kal.replaceAll(Pattern.quote(t),"");
+        }
+        out [1] = kal;
+
+        return out;
+    }
 
 
        public static void main(String[] args) {
+           Prepro pp = new Prepro();
+
+           //pp.loadStopWords("stopwords","kata");
+           ArrayList<String> out ;
+           /*
+           ArrayList<String> out = pp.loadKataTanpaStopWords("The sale was made to pay Yukos' " +
+                   "US$ 27.5 billion tax bill, Yuganskneftegaz was originally sold for US$ 9.4 " +
+                   "billion to a little known company Baikalfinansgroup which was later bought by" +
+                   " the Russian state-owned oil company Rosneft",false);
+
+           for (String s:out) {
+               System.out.println(s);
+           }
+           System.out.println(""); */
+
+           /*out = pp.loadKataTanpaStopWords("Actor Christopher_Reeve, best known for his role as Superman, " +
+                   "is paralyzed and cannot breathe without the help of a respirator after breaking his neck in a " +
+                   "riding accident in Culpeper, Va., on Saturday.",true,true);
+           */
+
+           /*out = pp.ambilTglNER("DATE=1799;MISC=French;PERSON=Louis Alexandre Berthier;LOCATION=Rome;PERSON=Pope Pius VI;LOCATION=Valence;LOCATION=Drôme;LOCATION=France;DATE=August of 1799");
+           for (String s:out) {
+               System.out.println(s);
+           }
+           */
+           String kal = "As late as 1799, priests were still being imprisoned or deported to penal colonies and " +
+                   "persecution only worsened after the French army led by General Louis Alexandre Berthier " +
+                   "captured Rome and imprisoned Pope Pius VI, who would die in captivity in Valence, Drôme, " +
+                   "France in August of 1799.";
+           String ner = "DATE=1799;MISC=French;PERSON=Louis Alexandre Berthier;LOCATION=Rome;PERSON=Pope Pius VI;" +
+                   "LOCATION=Valence;LOCATION=Drôme;LOCATION=France;DATE=August of 1799";
+           Object[] objOut = pp.ambilTokenTgl(kal,ner);
+           ArrayList<String> tokenTgl = (ArrayList<String>) objOut[0];
+           String sisaKal = (String) objOut[1];
+
+           for (String s:tokenTgl) {
+               System.out.println(s);
+           }
+
+           System.out.println("kal:"+kal);
+           System.out.println("Sisa kal:"+sisaKal);
 
        }
 }
