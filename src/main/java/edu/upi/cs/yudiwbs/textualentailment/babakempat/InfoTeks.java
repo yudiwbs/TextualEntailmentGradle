@@ -8,14 +8,16 @@ import java.util.Scanner;
  *
  * menyipan objek T dan H, termasuk syntatic structure
  *
+ * lihat prepro isiInfoTeks
+ *
  */
 public class InfoTeks {
     public int id; //idH atau idT
-    public ArrayList<String>  alVerb = new ArrayList<>();  //dalam lowercase
-    public ArrayList<String>  alNoun = new ArrayList<>();  //dalam lowercase
+    public ArrayList<String>  alVerb = new ArrayList<>();    //dalam lowercase
+    public ArrayList<String>  alNoun = new ArrayList<>();    //dalam lowercase
+    public ArrayList<String>  alPronoun = new ArrayList<>(); //dalam lowercase
     public String strukturSyn; //struktur sintaks dari kalimat spt (ROOT (S (NP dst
     public String teksAsli;
-
 
     private class Param {
         ArrayList<String> tree;
@@ -23,17 +25,23 @@ public class InfoTeks {
         String tag;
     }
 
+    /*
+       berdasarkan teksAsli dan strukturSyn, isi ulang salVerb dan alNoun
+     */
     public void isiArrListVerbNoun() {
-        //berdasarkan teksAsli dan strukturSyn, isi ulang salVerb dan alNoun
         Prepro pp = new Prepro();
         InfoTeks it = pp.isiInfoTeks(teksAsli,strukturSyn);
         alVerb.clear();
         alNoun.clear();
         alVerb = it.alVerb;
         alNoun = it.alNoun;
+        alPronoun = it.alPronoun;
     }
 
-    public ArrayList<String> cariTagRekur(Param p) {
+    /*
+       internal dipanggil cariTag
+     */
+    private  ArrayList<String> cariTagRekur(Param p) {
         ArrayList<String> out = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
         int kurung=0;
@@ -68,7 +76,10 @@ public class InfoTeks {
                 p.pos++;
             }
             if (stop) {
-                out.add(sb.toString().trim());
+                String hasil = sb.toString().trim();
+                hasil = hasil.replace(" '","'"); //perbaiki spasi sebelum apostrof
+                hasil = hasil.replace(" ,",","); //perbaiki spasi sebelum koma
+                out.add(hasil);
             } else {
                 sb.append("ERROR, KURUNG KURANG PASANGAN!!");
                 stop = true;
@@ -136,6 +147,16 @@ public class InfoTeks {
         return sb.toString().trim();
     }
 
+    public String getAllPronoun() {
+        StringBuilder sb = new StringBuilder();
+        for (String v:alPronoun) {
+            sb.append(v);sb.append(" ");
+        }
+        return sb.toString().trim();
+    }
+
+
+
 
     @Override
     public String toString() {
@@ -157,6 +178,14 @@ public class InfoTeks {
             sbTemp.append(" ");
         }
         sbTemp.append(System.lineSeparator());
+
+        sbTemp.append("Pronoun:");
+        for (String s:alNoun) {
+            sbTemp.append(s);
+            sbTemp.append(" ");
+        }
+        sbTemp.append(System.lineSeparator());
+
         return sbTemp.toString();
     }
 

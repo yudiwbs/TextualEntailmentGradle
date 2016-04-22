@@ -1,28 +1,21 @@
 package edu.upi.cs.yudiwbs.textualentailment.babakempat;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
-import org.apache.xpath.operations.Number;
-import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
-import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
-
-import java.io.File;
-import java.security.acl.Group;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
 
 /**
  * Created by yudiwbs on 03/04/2016.
  *
- *  menggunakan glove untuk kemiripan dua sentnece
+ *   menggunakan glove/word2vec untuk kemiripan dua sentnece,
  *
- *  adaptasi dari paper UMBC (han2013)
+ *   - lihat di bagian init untuk setvectornya
+ *   - untuk set penalti liha tclass simGroupToken
+ *   adaptasi dari paper UMBC (han2013)
  *
  */
 
-public class IsiGloveUmbc1 {
+public class IsiWordEmbedUmbc {
     public String namaTabel;
     private Connection conn = null;
     private PreparedStatement pUpd = null;
@@ -30,6 +23,7 @@ public class IsiGloveUmbc1 {
 
     ResultSet rs = null;
     Prepro pp;
+    SimGroupToken sgt;
 
     public void init(String vnamaTabel, String kolomTujuan) {
         namaTabel = vnamaTabel;
@@ -40,7 +34,8 @@ public class IsiGloveUmbc1 {
         try {
             conn = db.getConn();
             //jika sudah ada isi lagi (dikomentari yg bagian is null)
-            String strSel = "select id,t,h, t_gram_structure, h_gram_structure,t_ner, h_ner " +
+            String strSel = "select id,t,h, t_gram_structure, " +
+                    "h_gram_structure,t_ner, h_ner, isEntail " +
                     " from " + namaTabel + " #limit 10" ; //ditabatasi dulu sepuluh
 
 
@@ -53,8 +48,32 @@ public class IsiGloveUmbc1 {
             ex.printStackTrace();
         }
 
-    }
+        //paling akhir, karena lama
 
+        //
+        //paragram sl999: lebih bagus pada hasil testing
+
+        sgt = new SimGroupToken("D:\\eksperimen\\paragram\\paragram_300_sl999\\paragram_300_sl999\\paragram_300_sl999.txt",
+                "D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz");
+
+        //paragaram ws353
+
+        //sgt = new SimGroupToken("D:\\eksperimen\\paragram\\paragram_300_ws353\\paragram_300_ws353\\paragram_300_ws353.txt",
+        //        "D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz");
+
+
+        /*
+        //glove
+        sgt = new SimGroupToken("D:\\eksperimen\\glove\\glove.6B.300d.txt",
+                "D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz");
+        */
+
+
+        //sgt = new SimGroupToken("D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz");
+        //System.out.println("Menggunakan W2Vec");
+
+        //batas terendah sebelum kena penalti
+    }
 
     @Override
     public void finalize() {
@@ -79,8 +98,6 @@ public class IsiGloveUmbc1 {
         rs = null;
         try {
             rs = pSel.executeQuery();
-            SimGroupToken sgt = new SimGroupToken("D:\\eksperimen\\glove\\glove.6B.300d.txt");
-
             while (rs.next()) {
                 //id,t,h, t_gram_structure, h_gram_structure
                 int id = rs.getInt(1);
@@ -90,7 +107,9 @@ public class IsiGloveUmbc1 {
                 String hSynTree = rs.getString(5);
                 String tNer = rs.getString(6);
                 String hNer = rs.getString(7);
+                Boolean isEntail = rs.getBoolean(8);
 
+                //debug print
                 System.out.println("");
                 System.out.println("id:"+id);
                 //System.out.println("T:"+t);
@@ -101,6 +120,8 @@ public class IsiGloveUmbc1 {
 
                 System.out.println("T:"+t);
                 System.out.println("H:"+h);
+                System.out.println("IsEntail:----------->" +
+                        ""+isEntail);
 
                 //isi group token
                 GroupToken gtT = new GroupToken();
@@ -108,7 +129,9 @@ public class IsiGloveUmbc1 {
                 GroupToken gtH = new GroupToken();
                 gtH.ambilToken(h,hNer);
 
+                //nanti bisa gabung pengisian variabelnya
                 sgt.setGroupToken(gtT,gtH);
+                sgt.setTH(t,h);
                 sgt.setPosTag(tSynTree,hSynTree);
                 double jarak = sgt.getSim();
                 System.out.println("Jarak:"+jarak);
@@ -128,17 +151,25 @@ public class IsiGloveUmbc1 {
 
         //yg 840B token saat dijalankan makan waktu 3 jam dan akhirnya kehabisan memori, test lagi nanti
         //840B tokens, 2.2M vocab, cased, 300d vectors, 2.03 GB download
-        String str840 = "D:\\eksperimen\\glove\\glove.840B.300d\\glove.840B.300d.txt";
+        //String str840 = "D:\\eksperimen\\glove\\glove.840B.300d\\glove.840B.300d.txt";
         //6B tokens, 400K vocab, uncased, 50d, 100d, 200d, & 300d
-        String str6 ="D:\\eksperimen\\glove\\glove.6B.300d.txt";
+        //String str6 ="D:\\eksperimen\\glove\\glove.6B.300d.txt";
         //42B tokens, 1.9M vocab, uncased, 300d vectors, hasil kurang
-        String str42 = "D:\\eksperimen\\glove\\glove.42B.300d\\glove.42B.300d.txt";
+        //String str42 = "D:\\eksperimen\\glove\\glove.42B.300d\\glove.42B.300d.txt";
 
-        IsiGloveUmbc1 iw = new IsiGloveUmbc1();
+        IsiWordEmbedUmbc iw = new IsiWordEmbedUmbc();
         //iw.init("D:\\eksperimen\\glove\\glove.6B.300d.txt","rte3_babak2");
         //iw.init(str840,"rte3_babak2","skor_glove_perkalian_840"); //gagal
-        iw.init("rte3_babak2","umbc_glove1");
-        //iw.init("rte3_test_gold","umbc_glove1");
+        //iw.init("rte3_test_gold","umbc_glove2");
+        //iw.init("rte3_babak2","umbc_glove_lematisasi");
+        iw.init("rte3_babak2","umbc_paragram_penaltisubj"); //pake vektor paragram, dari paper From Paraphrase Database to Compositional Paraphrase Model and Back (Wieting)
+        //iw.init("rte3_babak2","umbc_glove_dua_arah"); //lanjutan dari fix1, T->H plus H->T, jelek 67.125
+        //iw.init("rte3_babak2","umbc_glove_w2c"); //gabungan antara w2c dan glove (rata2? max? min?)
+        //iw.init("rte3_test_gold","umbc_w2v_fix1"); //hanya w2v, tapi berdasarkan fix1
+        //iw.init("rte3_test_gold","umbc_glove_fixdate_stopwords2");
+        //iw.init("rte3_test_gold","umbc_glove_fixdate");
+        //iw.init("rte3_test_gold","umbc_glove_wordnet");
+        //iw.init("rte3_test_gold","umbc_glove3");
 
         //iw.init("D:\\eksperimen\\glove\\glove.6B.300d.txt","rte3_test_gold");
         // iw.init("D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz",
@@ -146,7 +177,6 @@ public class IsiGloveUmbc1 {
 
         iw.proses();
         iw.close();
-
     }
 
 }

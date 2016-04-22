@@ -22,8 +22,6 @@ public class KoneksiDB {
     String userPwd="";
 
 
-
-
     private void getRes() throws IOException {
 
         Properties prop = new Properties();

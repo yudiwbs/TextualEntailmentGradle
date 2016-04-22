@@ -1,5 +1,5 @@
 <component name="libraryTable">
-  <library name="Gradle: org.fusesource:sigar:1.6.4:native">
+  <library name="Gradle: org.fusesource:sigar:native:1.6.4">
     <CLASSES>
       <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.fusesource/sigar/1.6.4/9b481573ea030787c487da3a8e2d89ba757371b5/sigar-1.6.4-native.jar!/" />
     </CLASSES>

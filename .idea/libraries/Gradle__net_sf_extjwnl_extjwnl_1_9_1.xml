@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: net.sf.extjwnl:extjwnl:1.9.1">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.sf.extjwnl/extjwnl/1.9.1/5c14188b8e515f93aa81989dde2861bd702708c5/extjwnl-1.9.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.sf.extjwnl/extjwnl/1.9.1/f4e9bca31d36fcaf5160cb6ba28b6d88f9627580/extjwnl-1.9.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

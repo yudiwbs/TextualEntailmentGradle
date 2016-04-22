@@ -1,5 +1,5 @@
 <component name="libraryTable">
-  <library name="Gradle: com.github.fommil.netlib:netlib-native_system-linux-armhf:1.1:natives">
+  <library name="Gradle: com.github.fommil.netlib:netlib-native_system-linux-armhf:natives:1.1">
     <CLASSES>
       <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.github.fommil.netlib/netlib-native_system-linux-armhf/1.1/27ae9f6a9c88b3f8d12ffa52d62941615f8ed416/netlib-native_system-linux-armhf-1.1-natives.jar!/" />
     </CLASSES>

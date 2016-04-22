@@ -3,61 +3,194 @@ package edu.upi.cs.yudiwbs.textualentailment.babakempat;
 import com.mdimension.jchronic.Chronic;
 import com.mdimension.jchronic.Options;
 import com.mdimension.jchronic.utils.Span;
+import net.sf.extjwnl.data.POS;
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by yudiwbs on 09/04/2016.
  * menghitung jarak/similarity antar dua grup token
+ *
+ *
+ * Dipanggil oleh IsiWordEmbedUmbc
+ *
+ *   fix1: perbaikan proses tgl, angka, buang dash
+ *
  */
 
 public class SimGroupToken {
-    WordVectors vec  = null;
-    GroupToken gtT=null;
-    GroupToken gtH=null;
-    String posTagT;
-    String posTagH;
+    //WordVectors vec;
+    WordVectors vecGlove  = null;
+    //WordVectors vecW2V  = null;
+
+    GroupToken gtTT=null;
+    GroupToken gtHH=null;
+    Prepro pp;
+    String posTagT;InfoTeks itT;
+    String posTagH;InfoTeks itH;
+    String t,h;
+    //ProsesLemma pLemma;
+    ProsesWordnet pWordnet;
 
     Options optTime;
 
-    public  void setGroupToken(GroupToken gtT,GroupToken gtH) {
-        this.gtT = gtT;
-        this.gtH = gtH;
+    /*
+    fix2_ver2: bobot penalti kata dikurangi 0.4 menjadi 0.6 utk verbnoun dan 0.1 untuk
+    kata lainnya.
+     */
+
+    final static  double  penaltiAngka = 1;  //umbc: 1
+    final static  double  penaltiTgl = 0.5;  //umbc: 0.5
+    final static  double  penaltiUang = 0.5; //umbc: 0.5
+    final static  double  penaltiKataVerbNoun = 1;  //umbc 1
+    final static  double  penaltiKataLain = 0.5;    //umbc 0.5
+    final static  double  batasPenaltiKata = 0.25;
+    final static  double  penaltiSubjTdkCocok = 1;
+
+    //inisialisasinya bisa digabung nanti
+    public void setTH(String t, String h) {
+        this.t = t;
+        this.h = h;
     }
 
+    public void setGroupToken(GroupToken gtT,GroupToken gtH) {
+        this.gtTT = gtT;
+        this.gtHH = gtH;
+    }
+
+    //FS: itH dan itT terisi
     public void setPosTag(String posTagT, String posTagH) {
         this.posTagT = posTagT;
         this.posTagH = posTagH;
+
+        itT = pp.isiInfoTeks(t,posTagT);
+        itH = pp.isiInfoTeks(h,posTagH);
     }
 
-    public SimGroupToken(String fileVec) {
+    //output di trim dan di lowercase
+    
+
+    private String getSubj(InfoTeks it, String vKataPred) {
+        String out = "";
+        //String kataPred = vKataPred.toLowerCase();
+        ArrayList<String> alNP = it.cariTag("NP");
+
+        //akal2an
+
+        int posPred = it.teksAsli.indexOf(vKataPred);
+
+        //cari NP yang terdekat tapi tidak melewati
+        String lastNP="";
+        for (String np:alNP) {
+
+            int posNP = it.teksAsli.indexOf(np);
+            if (posNP>posPred) break;//selesai
+            if (posNP<0) continue; //harusnya sih pasti ketemu
+            int posAkhir = posNP+np.length();
+            if (posAkhir<posPred) {
+                lastNP = np;
+            }
+        }
+
+        out = lastNP;
+        return out;
+    }
+
+    private boolean cekSubjCocok(String predH, String predT) {
+        /* mengambil subject berbentuk NP (diasumsikan subject)
+         yang terkait dengan  predikat T dan predikat H
+        contoh:
+        id:113
+        T:Unfortunately, a visit from Mrs Hobday, causes Mr Browne to leave for London.
+        H:Mrs Hobday departs London.
+
+        predH: departs  -> subjeck: Mrs Hobday
+        predT: leave    --> subject Mr. Browne
+
+        tidak cocok, return false (utk nanti kena penalti)
+
+        */
+
+        Boolean out = true;
+        //cari nounphrase yang terdekat dengan predH dan predT?
+        //itH.alNoun
+
+        String subjH = getSubj(itH,predH).toLowerCase();
+        String subjT = getSubj(itT,predT).toLowerCase();
+
+
+        System.out.println("Subyek H ("+predH+")="+subjH);
+        System.out.println("Subyek T ("+predT+")="+subjT);
+
+        //true jika salah satu contain
+
+        if (subjH.equals("")||subjT.equals("")) {
+            out = subjH.equals("")&&subjT.equals("");
+        } else {
+            out = ((subjH.contains(subjT)) || (subjT.contains(subjH)));
+        }
+        return out;
+    }
+
+
+    //jangan create berulang2!
+    //berat
+    public SimGroupToken(String fileVecGlove,String fileVecW2V) {
+
+        pp       = new Prepro();
+        //pLemma   = new ProsesLemma(); //panggil sekali, karena ada proses load
+        pWordnet = new ProsesWordnet();
+
+
         optTime = new Options();
         optTime.setCompatibilityMode(true); //untuk apa??
         //opt.setGuess(true); //untuk apa??
 
-        //load vector
+        //load vector GLOVE
+
         try {
-            System.out.println("Mulai Load, agak lama ...");
-            //vec = WordVectorSerializer.loadGoogleModel(gModel, true);
-            vec = WordVectorSerializer.loadTxtVectors(new File(fileVec));
+            System.out.println("Mulai Load GLOVE, agak lama ...");
+            //vec = WordVectorSerializer.loadGoogleModel(new File(fileVec), true);
+            vecGlove = WordVectorSerializer.loadTxtVectors(new File(fileVecGlove));
             System.out.println("Load selesai... ");
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+
+
+
+        //load
+        //load vector W2V
+        /*
+        try {
+            System.out.println("Mulai Load w2vec, agak lama ...");
+            vecW2V = WordVectorSerializer.loadGoogleModel(new File(fileVecW2V), true);
+            System.out.println("Load selesai... ");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        */
     }
 
-    //hitung sim antara gtH dan gtT, gtH dan gtT sudah diisi
-    //proses kata per kata
-    public double getSim(){
-        assert (gtH!=null && gtT!=null);
+    //periksa dari gH -> gT
+    //dipisah supaya nanti bisa dibalik (dua arah spt UMBC)
+    private double getSimInternal(GroupToken gtT,GroupToken gtH) {
         double out = 0;
+        assert (gtH!=null && gtT!=null);
         double totalSkor = 0;  //ditambah
+        //double totalSkorKali = 1; //dikali
         //hitung penalti bagi yg skornya rendah
-        double batasPenalti = 0.25; //<= 0.2 masuk jadi penalti
         double totalPenalti  = 0;
+        //double totalPenaltiKali = 1; //dikali, cuma aneh karena pasti kena penalti semua
 
         //penalti *belum* memperhitunkan bobot 1/log (freq) spt di paper
 
@@ -73,14 +206,16 @@ public class SimGroupToken {
                 for (String sT: gtT.tokenUang) {
                     if (sH.equals(sT)) {
                         ketemuCocok = true;
-                        totalSkor++;;
+                        totalSkor++;
+                        //totalSkorKali = totalSkorKali * 1; //cuma supaya jelas saja, bisa dibuang baris ini
                         System.out.println(sH+"->"+sT);
                         break; //proses sH berikutnya
                     }
                 }
                 if (!ketemuCocok) { //kena penalti
-                    double penalti = 0.5;
+                    double penalti = penaltiUang;
                     totalPenalti = totalPenalti+penalti;
+                    //totalPenaltiKali = totalPenaltiKali * penalti;
                     System.out.println("Tdk ada pasangan, kena penalti:"+sH+"("+penalti+")");
                 }
             }
@@ -95,52 +230,88 @@ public class SimGroupToken {
                     if (sH.equals(sT)) {
                         ketemuCocok = true;
                         totalSkor++;;
+                        //totalSkorKali = totalSkorKali * 1; //cuma supaya jelas saja, bisa dibuang baris ini
                         System.out.println(sH+"->"+sT);
                         break; //proses sH berikutnya
                     }
                 }
                 if (!ketemuCocok) { //kena penalti
-                    double penalti = 0.5;
+                    double penalti = penaltiAngka; //angka penaltinya besar
                     totalPenalti = totalPenalti+penalti;
+                    //totalPenaltiKali = totalPenaltiKali * penalti;
                     System.out.println("Tdk ada pasangan, kena penalti:"+sH+"("+penalti+")");
                 }
             }
         }
 
+        /*
+
+         @Override
+    public void init() {
+
+    }
+
+         */
+
         //tanggal
+        String pattern = "(15|16|17|18|19|20)\\d{2}";
+        Pattern pTahun;
+        pTahun = Pattern.compile(pattern);
         if (gtH.tokenTgl.size()>0) {
             for (String sH: gtH.tokenTgl) {
                 boolean ketemuCocok = false;
                 System.out.println("Cari tgl:"+sH);
-                Span timeH = Chronic.parse(sH, optTime);
-                if (timeH!=null) {
-                    Calendar calH = timeH.getBeginCalendar();
-                    System.out.println("" + calH.getTime());
-                    for (String sT : gtT.tokenTgl) {
-                        //konversi tgl
-                        Span timeT = Chronic.parse(sT, optTime);
-                        if (timeT != null) {
-                            Calendar calT = timeT.getBeginCalendar();
-                            System.out.println("" + calT.getTime());
-                            if (calH.equals(calT)) {
-                                ketemuCocok = true;
-                                totalSkor++;
-                                System.out.println(sH + "->" + sT);
-                                break; //proses sH berikutnya
-                            }
-                        } else {
-                            //ERROR, tgl tidak bisa diparsing!
-                            System.out.println("Tgl tidak bisa diparsing!:" + sT);
-                        }
-                    }   //for sT
-                } //if timeH<>null
-                else {
-                    System.out.println("Tgl tidak bisa diparsing!:" + sH);
+
+                //cocokan  tahun
+                Matcher mH = pTahun.matcher(sH);
+                ArrayList<String> alTahunH = new ArrayList<>();
+                while (mH.find()) {
+                    alTahunH.add(mH.group());
+                    System.out.println("tahunH:"+mH.group());
                 }
+                String strTCocok="";
+                for (String sT : gtT.tokenTgl) {
+                    //cari tahun
+                    Matcher mT = pTahun.matcher(sH);
+                    ArrayList<String> alTahunT = new ArrayList<>();
+                    while (mT.find()) {
+                        alTahunT.add(mT.group());
+                        System.out.println("tahunT:"+mT.group());
+                    }
+
+                    if (alTahunH.size()>0) {
+                        //ada tahun di H
+                        for (String tahunH : alTahunH) {
+                            if (ketemuCocok) break;
+                            for (String tahunT : alTahunT) {
+                                if (tahunH.equals(tahunT)) {
+                                    ketemuCocok = true;
+                                    strTCocok = sT;
+                                    totalSkor++;
+                                    //totalSkorKali = totalSkorKali * 1; //cuma supaya jelas saja, bisa dibuang baris ini
+                                    break; //proses sH berikutnya
+                                }
+                            }
+                        }
+                    } else {
+                       //tidak ketemu tahun di H, proses stringnya
+                        if (sH.equals(sT)) {
+                            ketemuCocok = true;
+                            strTCocok = sT;
+                            totalSkor++;
+                            //totalSkorKali = totalSkorKali * 1; //cuma supaya jelas saja, bisa dibuang baris ini
+                            break; //proses sH berikutnya
+                        }
+                    }
+                }   //for sT
+
                 if (!ketemuCocok) { //kena penalti
-                    double penalti = 0.5;
+                    double penalti = penaltiTgl;
                     totalPenalti = totalPenalti+penalti;
+                    //totalPenaltiKali = totalPenaltiKali * penalti;
                     System.out.println("Tdk ada pasangan, kena penalti:"+sH+"("+penalti+")");
+                } else  {
+                    System.out.println("Cocok: " + sH + "->" + strTCocok);
                 }
             }
         }
@@ -148,7 +319,7 @@ public class SimGroupToken {
 
 
         //sisanya (kata)
-        //perlu dicari nilai masikum
+        //perlu dicari nilai maksimum
         for (String vH:gtH.tokenKata) {
             double maxSkor = 0; //makin besar makin bagus, makin similar
             String strTercocok="";
@@ -178,31 +349,150 @@ public class SimGroupToken {
                         break;
                         //System.out.println(vH+"->"+vT);
                     } else {
-                        //System.out.println("Proses Glove (TBD)");
-                        //cek skor kemiripan GLOVE
-                        double skorEm = vec.similarity(vH,vT);
+                        //cek skor kemiripan
+                        //glove di lowercase
+
+                        //lematisasi hasilnya gak bagus
+                        //String vHlem  = pLemma.lemmatize(vH).trim();
+                        //String vTlem  = pLemma.lemmatize(vT).trim();
+
+                        //System.out.println("Hlem:"+vHlem);
+                        //System.out.println("Tlem:"+vTlem);
+
+                        double skorEmGlove = vecGlove.similarity(vH.toLowerCase().trim(),vT.toLowerCase().trim());
+                        //System.out.println("Skor glove: "+vH+":"+vT+"="+skorEmGlove);
+
+                        //double skorEmGlove = vecGlove.similarity(vH.toLowerCase(),vT.toLowerCase());
+                        //double skorW2V = vecW2V.similarity(vH,vT);
+                        //double skorEm = (skorEmGlove+skorW2V) / 2; //rata22
+                        //double skorEm = Math.max(skorEmGlove,skorW2V); //cari max
+                        //double skorEm = Math.min(skorEmGlove,skorW2V); //cari min
+                        //double skorEm = skorW2V; //w2vec saja
+                        double skorEm = skorEmGlove; //w2vec saja
                         if (skorEm > maxSkor) {
                             maxSkor = skorEm;
                             strTercocok = vT;
                         }
-                        //TBD
-                        //jika melebihi thresold tertentu tambah boosting wordnet
+
                     }
             } //loop for vT
             System.out.print(vH +"-> "+strTercocok+" ");
             System.out.println("("+maxSkor+")");
 
+
+
             //terlalu rendah, kena penalti
-            if (maxSkor<=batasPenalti) {
-                //
+            if (maxSkor<=batasPenaltiKata) {
+                System.out.println("vH kena penalti.");
+                if ( itH.alNoun.contains(vH) ||
+                        itH.alPronoun.contains(vH) ||
+                        itH.alVerb.contains(vH)) {
+                    System.out.println(" Verb/noun/pronoun, penalti lebih besar");
+                    double penalti = penaltiKataVerbNoun;
+                    totalPenalti = totalPenalti+penalti;
+                    //totalPenaltiKali = totalPenaltiKali*penalti;
+
+                } else {
+                    System.out.println("Selain Verb/noun/pronoun, penalti lebih kecil");
+                    double penalti = penaltiKataLain;
+                    totalPenalti = totalPenalti+penalti;
+                    //totalPenaltiKali = totalPenaltiKali*penalti;
+                }
+            } else {
+                //cek subyek VH dengan subyek strTercocok apakah sama?
+                //kalau tidak sama harusnya kena penalti
+
+                //hanya proses kalau vH adalah verb dan tidak kena penalti
+
+                if (itH.alVerb.contains(vH)) {
+                    boolean subjCocok = cekSubjCocok(vH, strTercocok);
+                    if (subjCocok) {
+                        System.out.println("Subyek cocok");
+                    } else {
+                        System.out.println("Subyek tidak cocok, penalti");
+                        double penalti = penaltiSubjTdkCocok;
+                        totalPenalti = totalPenalti+penalti;
+                    }
+                }
             }
 
+            /*
+            //jika melebihi thresold tertentu tambah boosting wordnet
+            //masih gagal, nggak ada kata wordnet yg ketemu
+
+            //0.5 e ^ (-alpha* D(x,y)
+            double alpha = 0.25;
+            //rule 1: same wordnet sysnset (sdh)
+            //rule 2: directy hypernym (sdh)
+            double penambah=0;
+            //tambah wordnet
+            //pake batas penalti saja
+            //tapi kalau=1 artinya sudah eksak, gak perlu ditambah lagis
+            if (maxSkor>batasPenaltiKata && maxSkor<1) {
+                //hanya kalau vh dan vt verb/noun  (nanti tambah adjektif?)
+                if ( itH.alNoun.contains(vH.toLowerCase()) ||
+                     itH.alVerb.contains(vH.toLowerCase()) ) {
+
+                    System.out.println("tambah boost wordnet");
+                    String lt  = pLemma.lemmatize(strTercocok.toLowerCase());
+                    String lVh = pLemma.lemmatize(vH.toLowerCase());
+
+                    POS posKata=null;
+
+                    if (itH.alNoun.contains(vH.toLowerCase())) {
+                        posKata = POS.NOUN;
+                    } else if (itH.alVerb.contains(vH.toLowerCase())) {
+                        posKata = POS.VERB;
+                    }
+                    if (pWordnet.isSatuSynset(posKata,lVh,lt)) {
+                        //path = 0
+                        //0.5 * e ^ -0.25*0
+                        penambah = 0.5;
+                        System.out.println("satu synset, ditambah 0.5");
+                    } else if (pWordnet.isDirectHypernym(posKata,lVh,lt)) {
+                        //path = 1
+                        // 0.5 * e ^ -0.25*1 = 0.38940039153
+                        penambah = 0.38940039153;
+                        System.out.println("directy hypernim , ditambah ");
+                    } else {
+                        //nebak, path = 2
+                        penambah = 0.30326532985;
+                    }
+                    System.out.println("Lh->Lt:"+lVh+"->"+lt);
+                    System.out.println("Penambah:"+penambah);
+                }  // noun / werb
+            }
+            */
 
             totalSkor = totalSkor + maxSkor;
+            //totalSkorKali = totalSkorKali * maxSkor;
         }
 
+
         int jumToken = gtH.tokenUang.size()+gtH.tokenTgl.size()+gtH.tokenAngka.size()+gtH.tokenKata.size();
-        out = totalSkor / (jumToken); //tidak perlu dikali 2 karena hanya dari H->T (tidak bolakbalik)
+        out = (totalSkor / (jumToken)) - (totalPenalti / (jumToken)); //tidak perlu dikali 2 karena hanya dari H->T (tidak bolakbalik)
+
+        //out = (totalSkorKali / (jumToken)) - (totalPenaltiKali / (jumToken)); //tidak perlu dikali 2 karena hanya dari H->T (tidak bolakbalik)
+
+        //penalti di jumlah, totalskor dikali
+        //out = (totalSkorKali / (jumToken)) - (totalPenalti/ (jumToken));
+
+        System.out.println("Total skor:"+totalSkor/jumToken);
+        //System.out.println("Total skor:"+totalSkorKali/jumToken);
+
+        System.out.println("Total penalti:"+totalPenalti/jumToken);
+        //System.out.println("Total penalti:"+totalPenaltiKali/jumToken);
+
+        return out;
+    }
+
+
+
+    //hitung sim antara gtH dan gtT, gtH dan gtT sudah diisi
+    //proses kata per kata
+    public double getSim(){
+        double out = 0;
+        out =  getSimInternal(gtTT,gtHH);
         return out;
     }
 
@@ -228,10 +518,74 @@ public class SimGroupToken {
         GroupToken gtH = new GroupToken();
         gtH.ambilToken(h,hNer);
 
-        SimGroupToken sgt = new SimGroupToken("D:\\eksperimen\\glove\\glove.6B.300d.txt");
+        //D:\eksperimen\paragram\paragram_300_sl999\paragram_300_sl999\paragram_300_sl999.txt
+
+
+        SimGroupToken sgt = new SimGroupToken("D:\\eksperimen\\glove\\glove.6B.300d.txt",
+                "D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz");
+
+
         sgt.setGroupToken(gtT,gtH);
         double skor = sgt.getSim();
         System.out.println("skor:"+skor);
     }
 
 }
+
+/*
+
+ //tanggal
+        if (gtH.tokenTgl.size()>0) {
+            for (String sH: gtH.tokenTgl) {
+                boolean ketemuCocok = false;
+                System.out.println("Cari tgl:"+sH);
+                Span timeH = Chronic.parse(sH, optTime);  //Chronic jelek!! diubah hanya ambil tahun saja
+                Calendar calH=null;
+                if (timeH!=null) {
+                    calH = timeH.getBeginCalendar();
+                    System.out.println("cal H:" + calH.getTime());
+                } else {
+                    System.out.println("Gagal parsing date H:" + sH);
+                }
+                for (String sT : gtT.tokenTgl) {
+                    //konversi tgl
+                    Span timeT = Chronic.parse(sT, optTime);
+                    Calendar calT = null;
+                    if (timeT != null) {
+                        calT = timeT.getBeginCalendar();
+                        System.out.println("" + calT.getTime());
+                    } else {
+                        System.out.println("Gagal parsing date T:" + sT);
+                    }
+
+                    if ((calH != null) && (calT != null)) {
+                        if (calH.equals(calT)) {
+                            ketemuCocok = true;
+                            totalSkor++;
+                            //totalSkorKali = totalSkorKali * 1; //cuma supaya jelas saja, bisa dibuang baris ini
+                            System.out.println(sH + "->" + sT);
+                            break; //proses sH berikutnya
+                        }
+                    } else {  //salah satu gagal di parse, gunakan perbandingan string saja
+                        System.out.println("Gagal parse tgl, bandingkan stringnya");
+                        if (sH.equals(sT)) {
+                            ketemuCocok = true;
+                            totalSkor++;
+                            //totalSkorKali = totalSkorKali * 1; //cuma supaya jelas saja, bisa dibuang baris ini
+                            System.out.println(sH + "->" + sT);
+                            break; //proses sH berikutnya
+                        }
+                    }
+                }   //for sT
+                 //if timeH<>null
+
+                if (!ketemuCocok) { //kena penalti
+                    double penalti = 0.5;
+                    totalPenalti = totalPenalti+penalti;
+                    //totalPenaltiKali = totalPenaltiKali * penalti;
+                    System.out.println("Tdk ada pasangan, kena penalti:"+sH+"("+penalti+")");
+                }
+            }
+        }
+
+ */

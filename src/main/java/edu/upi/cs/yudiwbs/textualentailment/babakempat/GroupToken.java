@@ -15,8 +15,8 @@ public class GroupToken {
     Prepro pp = new Prepro();
 
     public GroupToken() {
-        pp.loadStopWords("stopwords","kata");
-    }
+        pp.loadStopWords("stopwords2","kata");
+    }  //versi stopwords wash.edu plus tambahan
 
     //fs: arraylist para token terisi
     public void ambilToken(String kal,String ner) {
@@ -28,8 +28,6 @@ public class GroupToken {
         Object[] objOut = pp.ambilTokenTgl(kal,ner);
         tokenTgl = (ArrayList<String>) objOut[0];
         String sisaKal = (String) objOut[1];
-
-
         //debug
         System.out.println("Ambil Tanggal:");
         for (String s:tokenTgl) {
@@ -58,10 +56,12 @@ public class GroupToken {
 
         //TERAKHIR
         tokenKata  = pp.loadKataTanpaStopWords(sisaKal,true,true);
+        /*
         System.out.println("Sisanya:");
         for (String s:tokenKata) {
             System.out.println(s);
         }
+        */
 
     }
 }

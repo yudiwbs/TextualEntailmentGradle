@@ -33,6 +33,8 @@ public class Prepro {
     private StanfordCoreNLP pipeline;
 
 
+
+
     //kalau dapat error
     //Unrecoverable error while loading a tagger model
     // Unable to resolve "edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger"
@@ -147,7 +149,7 @@ public class Prepro {
         if (buangSelainHuruf) {
             //buang selaing alphanumerik
             //underscore dibiarkan krn berguna untuk word2vec
-            str2 = str.replaceAll("[^A-Za-z_\\-]", " ").replaceAll("\\s+", " ").trim();
+            str2 = str.replaceAll("[^A-Za-z_\\_]", " ").replaceAll("\\s+", " ").trim();
         } else {
             str2 = str; //tidak dibbuang
         }
@@ -157,6 +159,7 @@ public class Prepro {
             if (keLowerCase) {
                 kata = kata.toLowerCase();
             }
+            //buang kata yang ada di stopwords
             if (!alStopWords.contains(kata.toLowerCase())) {
                 if (kata.length()>1) { //satu kar dibuang
                     out.add(kata);
@@ -219,7 +222,8 @@ public class Prepro {
 
               try {
                      Class.forName("com.mysql.jdbc.Driver");
-                     conn = DriverManager.getConnection  ("jdbc:mysql://"+dbName+"?user="+userName+"&password="+password);
+                     KoneksiDB db = new KoneksiDB();
+                     conn =  db.getConn();
                      pSdhAda = conn.prepareStatement     (" select id from  "+ tableName + " where "+ fieldName +" = ?");
                      pIns    =  conn.prepareStatement    (" insert into  "+ tableName + "("+fieldName+") values (?)");
 
@@ -258,7 +262,7 @@ public class Prepro {
               System.out.println("selesai");
        }
 
-       //menghasilkan infoteks yang didalamnya ada daftar verb dan noun
+       //menghasilkan infoteks yang didalamnya ada daftar verb, noun, pronoun
        //pangil loadStopWords terlebih dulu jika mau stopwords dihilangkan
        public InfoTeks isiInfoTeks(String strIn,String synTree)  {
            InfoTeks out = new InfoTeks();
@@ -292,6 +296,7 @@ public class Prepro {
            outputnya:
            Verb:was made pay was sold known was bought
            Noun:sale yukos tax bill yuganskneftegaz company baikalfinansgroup oil company rosneft
+           pronoun:
 
            */
 
@@ -337,7 +342,12 @@ public class Prepro {
                        //sbNoun.append(kata);
                        //sbNoun.append(" ");
                        out.alNoun.add(kata);
-                   } else {
+                   } else if ( lastTag.equals("(PRP")  || lastTag.equals("(PRP$")
+                           || lastTag.equals("(WP")   || lastTag.equals("(WP$") ) {
+                       //sbNoun.append(kata);
+                       //sbNoun.append(" ");
+                       out.alPronoun.add(kata);}
+                   else {
                        //System.out.println("tag tdk ketemu"+lastTag);
                    }
                    sb.append(kata);
@@ -376,11 +386,56 @@ public class Prepro {
 
     /*
          token2 ini mungkin nanti dipisahkan ke kelas lain aja ya
+
+          fix: normalisasi angka berbentuk huruf
+        one
+        out[0] ArrayList<STring> token angka
+        out[1] STring kalimat sisa
      */
     public Object[] ambilTokenAngka(String kal, String ner) {
         Object[] out = new Object[2];
-        ArrayList<String> alToken = ambilSatuJenisNER("NUMBER",ner);
-        out[0] = alToken;
+        ArrayList<String> alTokenNumber = ambilSatuJenisNER("NUMBER",ner);
+        ArrayList<String> alTokenOrd = ambilSatuJenisNER("ORDINAL",ner);
+
+
+        ArrayList<String> alTokenGab = new ArrayList<>();
+        alTokenGab.addAll(alTokenNumber);
+        alTokenGab.addAll(alTokenOrd);
+
+        ArrayList<String> alToken2 = new ArrayList<>();
+
+
+        //konversi kalau ada yg berbentuk one, two, three  one, second,third
+        for (int i=0;i<alTokenGab.size();i++) {
+            String s = alTokenGab.get(i).toLowerCase().trim();
+            if (s.equals("one")||s.equals("first")||s.equals("1st")) {
+                alToken2.add("1");
+            } else
+            if (s.equals("two")||s.equals("second")||s.equals("2nd")) {
+                alToken2.add("2");
+            } else
+            if (s.equals("three")||s.equals("third")||s.equals("3th")) {
+                alToken2.add("3");
+            } else
+            if (s.equals("four")||s.equals("fourth")||s.equals("4th")) {
+                alToken2.add("4");
+            } else if (s.equals("five")||s.equals("fifth")||s.equals("5th")) {
+                alToken2.add("5");
+            } else if (s.equals("six")||s.equals("sixth")||s.equals("6th")) {
+                alToken2.add("6");
+            } else if (s.equals("seven")||s.equals("seventh")||s.equals("7th")) {
+                alToken2.add("7");
+            } else if (s.equals("eight")||s.equals("eighth")||s.equals("8th")) {
+                alToken2.add("8");
+            } else if (s.equals("nine")||s.equals("ninth")||s.equals("9th")) {
+                alToken2.add("9");
+            } else if (s.equals("ten")||s.equals("tenth")||s.equals("10th")) {
+                alToken2.add("10");
+            } else {
+                alToken2.add(s);
+            }
+        }
+        out[0] = alToken2; //ambil yg sudah diproses
 
         //buang dari kalimat
         //perlu buang yg panjang lebih dulu
@@ -388,8 +443,8 @@ public class Prepro {
         //kalau terbalik maka akan ada sisa August of
         //mungkin harusnya ambil informasi posisi dari lib stanfordnya langsung lebih elegan
         ComparatorPanjangKalimat comparator = new ComparatorPanjangKalimat(false);
-        java.util.Collections.sort(alToken, comparator);
-        for (String t:alToken) {
+        java.util.Collections.sort(alTokenGab, comparator);
+        for (String t:alTokenGab) {
             kal = kal.replaceAll(Pattern.quote(t),"");
         }
         out [1] = kal;
@@ -404,11 +459,16 @@ public class Prepro {
         output : [0] ArrayList<String>  berisi token
                  [1] String kalimat sisa
 
+        perlu dilowercase, recently = Recently
      */
     public Object[] ambilTokenTgl(String kal, String ner) {
         Object[] out = new Object[2];
         ArrayList<String> alToken = ambilSatuJenisNER("DATE",ner);
-        out[0] = alToken;
+        ArrayList<String> alToken2 = new ArrayList<>();
+        for (String s:alToken) {
+            alToken2.add(s.toLowerCase()); //jadikan lowercase
+        }
+        out[0] = alToken2;  //perlu lowercase karena misal: Recently dengan recently harusnya sama
 
         //buang dari kalimat
         //perlu buang yg panjang lebih dulu
@@ -420,7 +480,7 @@ public class Prepro {
         java.util.Collections.sort(alToken, comparator);
 
         for (String t:alToken) {
-            kal = kal.replaceAll(Pattern.quote(t),"");
+            kal = kal.replaceAll(Pattern.quote(t),""); //harus tetap pake token bukan token2
         }
         out [1] = kal;
 
@@ -454,6 +514,7 @@ public class Prepro {
                System.out.println(s);
            }
            */
+           /*
            String kal = "As late as 1799, priests were still being imprisoned or deported to penal colonies and " +
                    "persecution only worsened after the French army led by General Louis Alexandre Berthier " +
                    "captured Rome and imprisoned Pope Pius VI, who would die in captivity in Valence, Drôme, " +
@@ -470,6 +531,28 @@ public class Prepro {
 
            System.out.println("kal:"+kal);
            System.out.println("Sisa kal:"+sisaKal);
+           */
 
+           String kal = "Jerry Reinsdorf (born February 25 1936 in Brooklyn, New York) is the owner of Chicago White " +
+                   "Sox and the Chicago Bulls. Recently, he helped the White Sox win the 2005 World Series and, in " +
+                   "the process, collected his seventh championship ring overall (the first six were all with the " +
+                   "Bulls in the 1990s), becoming the third owner in the history of North American sports to win a " +
+                   "championship in two different sports.";
+           String ner = "PERSON=Jerry Reinsdorf;DATE=February 25 1936;LOCATION=Brooklyn;LOCATION=New York;" +
+                   "ORGANIZATION=Chicago White Sox;ORGANIZATION=Chicago Bulls;DATE=Recently;" +
+                   "ORGANIZATION=White Sox;DATE=2005;MISC=World Series;ORDINAL=seventh;" +
+                   "ORDINAL=first;NUMBER=six;ORGANIZATION=Bulls;DATE=the 1990s;ORDINAL=third;" +
+                   "MISC=North American;NUMBER=two;";
+
+           Object[] objOut = pp.ambilTokenAngka(kal,ner);
+           ArrayList<String> arrToken = (ArrayList<String>) objOut[0];
+           String sisaKal = (String) objOut[1];
+           for (String s:arrToken) {
+               System.out.println(s);
+           }
+           System.out.println("kal:"+kal);
+           System.out.println("Sisa kal:"+sisaKal);
+
+           //pp.fileStopwordsToDB("D:\\desertasi\\eksperimen\\stopwords_washedu.txt","stopwords2","kata");
        }
 }
