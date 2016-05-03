@@ -12,6 +12,7 @@ import java.io.FileNotFoundException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,7 +35,13 @@ public class SimGroupToken {
 
     GroupToken gtTT=null;
     GroupToken gtHH=null;
+
+    //nggak bisa pake remove stopwords karena perlu memproses dengan teks original
     Prepro pp;
+
+
+    Prepro ppStopWords;   //khusus utk proses stopwords
+
     String posTagT;InfoTeks itT;
     String posTagH;InfoTeks itH;
     String t,h;
@@ -55,6 +62,7 @@ public class SimGroupToken {
     final static  double  penaltiKataLain = 0.5;    //umbc 0.5
     final static  double  batasPenaltiKata = 0.25;
     final static  double  penaltiSubjTdkCocok = 1;
+    final static  double  penaltiKalNeg = 0.5;  //
 
     //inisialisasinya bisa digabung nanti
     public void setTH(String t, String h) {
@@ -77,21 +85,17 @@ public class SimGroupToken {
     }
 
     //output di trim dan di lowercase
-    
-
+    //fix: output dibuang stopwordsnya
     private String getSubj(InfoTeks it, String vKataPred) {
         String out = "";
-        //String kataPred = vKataPred.toLowerCase();
+
+
         ArrayList<String> alNP = it.cariTag("NP");
-
-        //akal2an
-
         int posPred = it.teksAsli.indexOf(vKataPred);
 
         //cari NP yang terdekat tapi tidak melewati
         String lastNP="";
         for (String np:alNP) {
-
             int posNP = it.teksAsli.indexOf(np);
             if (posNP>posPred) break;//selesai
             if (posNP<0) continue; //harusnya sih pasti ketemu
@@ -102,6 +106,17 @@ public class SimGroupToken {
         }
 
         out = lastNP;
+
+
+        ArrayList<String> alKata = ppStopWords.loadKataTanpaStopWords(out,true,true);
+
+        StringBuilder sb = new StringBuilder();
+        for (String s:alKata) {
+            sb.append(s);
+            sb.append(" ");
+        }
+        out = sb.toString().trim();
+
         return out;
     }
 
@@ -146,7 +161,13 @@ public class SimGroupToken {
     //berat
     public SimGroupToken(String fileVecGlove,String fileVecW2V) {
 
-        pp       = new Prepro();
+        //kenapa nggak menggunakan stopwords? mungkin karena untuk ambil subjek?
+        pp  = new Prepro();
+
+        ppStopWords = new Prepro();
+        ppStopWords.loadStopWords("stopwords2","kata");
+
+
         //pLemma   = new ProsesLemma(); //panggil sekali, karena ada proses load
         pWordnet = new ProsesWordnet();
 
@@ -158,9 +179,10 @@ public class SimGroupToken {
         //load vector GLOVE
 
         try {
-            System.out.println("Mulai Load GLOVE, agak lama ...");
-            //vec = WordVectorSerializer.loadGoogleModel(new File(fileVec), true);
+            System.out.println("Mulai Load model agak lama ...");
+            //vecW2V = WordVectorSerializer.loadGoogleModel(new File(fileVecW2V), true);
             vecGlove = WordVectorSerializer.loadTxtVectors(new File(fileVecGlove));
+
             System.out.println("Load selesai... ");
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -183,13 +205,15 @@ public class SimGroupToken {
 
     //periksa dari gH -> gT
     //dipisah supaya nanti bisa dibalik (dua arah spt UMBC)
-    private double getSimInternal(GroupToken gtT,GroupToken gtH) {
+    //walaupun yg dua arah hasilnya jelek
+    private double getSimInternal(GroupToken gtT, GroupToken gtH) {
         double out = 0;
         assert (gtH!=null && gtT!=null);
         double totalSkor = 0;  //ditambah
         //double totalSkorKali = 1; //dikali
         //hitung penalti bagi yg skornya rendah
         double totalPenalti  = 0;
+
         //double totalPenaltiKali = 1; //dikali, cuma aneh karena pasti kena penalti semua
 
         //penalti *belum* memperhitunkan bobot 1/log (freq) spt di paper
@@ -316,6 +340,8 @@ public class SimGroupToken {
             }
         }
 
+        HashMap<String,String> hmVerbHT = new HashMap<>();
+
 
 
         //sisanya (kata)
@@ -328,6 +354,7 @@ public class SimGroupToken {
                 if (vH.equals(vT)) {  //sama persis
                     maxSkor=1;
                     strTercocok = vT;
+
                     //System.out.println(vH+"->"+vT);
                     break; //tidak perlu diproses berikutnya
                 } else
@@ -362,13 +389,12 @@ public class SimGroupToken {
                         double skorEmGlove = vecGlove.similarity(vH.toLowerCase().trim(),vT.toLowerCase().trim());
                         //System.out.println("Skor glove: "+vH+":"+vT+"="+skorEmGlove);
 
-                        //double skorEmGlove = vecGlove.similarity(vH.toLowerCase(),vT.toLowerCase());
-                        //double skorW2V = vecW2V.similarity(vH,vT);
+                        //double skorW2V = vecW2V.similarity(vH,vT); //tidak dilowercase
                         //double skorEm = (skorEmGlove+skorW2V) / 2; //rata22
                         //double skorEm = Math.max(skorEmGlove,skorW2V); //cari max
                         //double skorEm = Math.min(skorEmGlove,skorW2V); //cari min
                         //double skorEm = skorW2V; //w2vec saja
-                        double skorEm = skorEmGlove; //w2vec saja
+                        double skorEm = skorEmGlove; //glove saja
                         if (skorEm > maxSkor) {
                             maxSkor = skorEm;
                             strTercocok = vT;
@@ -377,9 +403,8 @@ public class SimGroupToken {
                     }
             } //loop for vT
             System.out.print(vH +"-> "+strTercocok+" ");
+            hmVerbHT.put(vH,strTercocok);
             System.out.println("("+maxSkor+")");
-
-
 
             //terlalu rendah, kena penalti
             if (maxSkor<=batasPenaltiKata) {
@@ -399,11 +424,13 @@ public class SimGroupToken {
                     //totalPenaltiKali = totalPenaltiKali*penalti;
                 }
             } else {
+                //PENGECEKAN SUBYEK
                 //cek subyek VH dengan subyek strTercocok apakah sama?
                 //kalau tidak sama harusnya kena penalti
 
                 //hanya proses kalau vH adalah verb dan tidak kena penalti
 
+                /*
                 if (itH.alVerb.contains(vH)) {
                     boolean subjCocok = cekSubjCocok(vH, strTercocok);
                     if (subjCocok) {
@@ -414,6 +441,7 @@ public class SimGroupToken {
                         totalPenalti = totalPenalti+penalti;
                     }
                 }
+                */  //end pengecekan subyek
             }
 
             /*
@@ -468,9 +496,43 @@ public class SimGroupToken {
             //totalSkorKali = totalSkorKali * maxSkor;
         }
 
+        //hitung penalti kalau salah satu adalah kalimat negatif
+        //atau kalimat tidak langsung
+
+        /*
+        CekKalimatNegatif ck = new CekKalimatNegatif();
+        StructCariKalNegatif tNeg = ck.isKalimatNegatif(itT);
+        StructCariKalNegatif hNeg = ck.isKalimatNegatif(itH);
+
+
+        double skorPenaltiNeg = 0;
+
+        //hanya jika salah satu kalimat negatif XOR
+        if (tNeg.isNegatif ^ hNeg.isNegatif)  {
+            //hanya kalau verbnya sesuai
+
+            //kasus yg paling umum
+            //harus dicek apakah verb di H ada di bagian verb not
+            if ((tNeg.isNegatif) && hmVerbHT.containsValue(tNeg.verb))  {
+                skorPenaltiNeg = penaltiKalNeg;
+                System.out.println("KENA PENALTI NEGATIF");
+                System.out.println("verb:"+ tNeg.verb);
+            }
+
+            //kalau sebaliknya susah, karena jumlah verb di H lebih banyak
+            //diignore saja
+
+        }
+        */
+
 
         int jumToken = gtH.tokenUang.size()+gtH.tokenTgl.size()+gtH.tokenAngka.size()+gtH.tokenKata.size();
-        out = (totalSkor / (jumToken)) - (totalPenalti / (jumToken)); //tidak perlu dikali 2 karena hanya dari H->T (tidak bolakbalik)
+
+        //penalti negatif
+        //out = (totalSkor / jumToken) - (totalPenalti / jumToken) - skorPenaltiNeg; //tidak perlu dikali 2 karena hanya dari H->T (tidak bolakbalik)
+
+        //tanpa penalti negatif
+        out = (totalSkor / jumToken) - (totalPenalti / jumToken); //tidak perlu dikali 2 karena hanya dari H->T (tidak bolakbalik)
 
         //out = (totalSkorKali / (jumToken)) - (totalPenaltiKali / (jumToken)); //tidak perlu dikali 2 karena hanya dari H->T (tidak bolakbalik)
 

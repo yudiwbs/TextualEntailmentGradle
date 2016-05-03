@@ -40,6 +40,7 @@ public class InfoTeks {
 
     /*
        internal dipanggil cariTag
+       hasil sudah di trim
      */
     private  ArrayList<String> cariTagRekur(Param p) {
         ArrayList<String> out = new ArrayList<>();
@@ -89,11 +90,13 @@ public class InfoTeks {
     }
 
     /*
-       cari kelompok kata yang sesuai tag, contoh penggunaan lihat di method main
+       cari kelompok kata yang sesuai tag, support rekursif, contoh penggunaan lihat di method main
         Contoh:
         (ROOT (S (NP (NNP Police)) (VP (VBD recovered) (NP (CD 81) (NNP Andy) (NNP Warhol) (NNS lithographs))) (. .)))
 
-        berddasarkan tag: misal NNP haislnya {police, Andy, Warhol}  support rekursif
+        berddasarkan tag misal tag NNP hasilnya: {police, Andy, Warhol}
+
+        tbd: perlu posisi kata juga sebenarnya
 
      */
 

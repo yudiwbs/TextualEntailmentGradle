@@ -53,17 +53,20 @@ public class IsiWordEmbedUmbc {
         //
         //paragram sl999: lebih bagus pada hasil testing
 
+
         sgt = new SimGroupToken("D:\\eksperimen\\paragram\\paragram_300_sl999\\paragram_300_sl999\\paragram_300_sl999.txt",
                 "D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz");
 
+
         //paragaram ws353
-
-        //sgt = new SimGroupToken("D:\\eksperimen\\paragram\\paragram_300_ws353\\paragram_300_ws353\\paragram_300_ws353.txt",
-        //        "D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz");
-
-
         /*
+        sgt = new SimGroupToken("D:\\eksperimen\\paragram\\paragram_300_ws353\\paragram_300_ws353\\paragram_300_ws353.txt",
+                "D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz");
+        */
+
+
         //glove
+        /*
         sgt = new SimGroupToken("D:\\eksperimen\\glove\\glove.6B.300d.txt",
                 "D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz");
         */
@@ -162,8 +165,10 @@ public class IsiWordEmbedUmbc {
         //iw.init(str840,"rte3_babak2","skor_glove_perkalian_840"); //gagal
         //iw.init("rte3_test_gold","umbc_glove2");
         //iw.init("rte3_babak2","umbc_glove_lematisasi");
-        iw.init("rte3_babak2","umbc_paragram_penaltisubj"); //pake vektor paragram, dari paper From Paraphrase Database to Compositional Paraphrase Model and Back (Wieting)
-        //iw.init("rte3_babak2","umbc_glove_dua_arah"); //lanjutan dari fix1, T->H plus H->T, jelek 67.125
+        //iw.init("rte3_babak2","umbc_paragram_penaltisubj_fix"); //pake vektor paragram, dari paper From Paraphrase Database to Compositional Paraphrase Model and Back (Wieting)
+        //iw.init("rte3_babak2","umbc_paragram_best");
+        //iw.init("rte3_test_gold","umbc_paragram_best");
+        iw.init("rte3_babak2","umbc_glove_dua_arah"); //lanjutan dari fix1, T->H plus H->T, jelek 67.125
         //iw.init("rte3_babak2","umbc_glove_w2c"); //gabungan antara w2c dan glove (rata2? max? min?)
         //iw.init("rte3_test_gold","umbc_w2v_fix1"); //hanya w2v, tapi berdasarkan fix1
         //iw.init("rte3_test_gold","umbc_glove_fixdate_stopwords2");

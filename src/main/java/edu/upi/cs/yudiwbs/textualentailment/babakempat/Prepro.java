@@ -139,6 +139,20 @@ public class Prepro {
         return out;
     }
 
+    public String loadKataTanpaStopWordstoString(String str,boolean keLowerCase,boolean buangSelainHuruf) {
+        String out = "";
+        ArrayList<String> alS = loadKataTanpaStopWords(str,keLowerCase,buangSelainHuruf);
+
+        StringBuilder sb = new StringBuilder();
+        for (String s:alS) {
+            sb.append(s);
+            sb.append(" ");
+        }
+        out = sb.toString().trim();
+        return out;
+    }
+
+
 
     //loadstopwords harus dipanggil terlebih dulu!!
     //hanya huruf yang diterima
@@ -264,9 +278,9 @@ public class Prepro {
 
        //menghasilkan infoteks yang didalamnya ada daftar verb, noun, pronoun
        //pangil loadStopWords terlebih dulu jika mau stopwords dihilangkan
-       public InfoTeks isiInfoTeks(String strIn,String synTree)  {
+       public InfoTeks isiInfoTeks(String strKalimat,String synTree)  {
            InfoTeks out = new InfoTeks();
-           out.teksAsli = strIn;
+           out.teksAsli = strKalimat;
            out.strukturSyn = synTree;
 
            //buang kata selain verb dan noun
@@ -533,6 +547,7 @@ public class Prepro {
            System.out.println("Sisa kal:"+sisaKal);
            */
 
+           //testing ambil token NER
            String kal = "Jerry Reinsdorf (born February 25 1936 in Brooklyn, New York) is the owner of Chicago White " +
                    "Sox and the Chicago Bulls. Recently, he helped the White Sox win the 2005 World Series and, in " +
                    "the process, collected his seventh championship ring overall (the first six were all with the " +
