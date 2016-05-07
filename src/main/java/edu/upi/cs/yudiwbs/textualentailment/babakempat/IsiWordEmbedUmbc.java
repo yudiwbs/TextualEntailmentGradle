@@ -166,7 +166,7 @@ public class IsiWordEmbedUmbc {
         //iw.init("rte3_babak2","umbc_paragram_penaltisubj_fix"); //pake vektor paragram, dari paper From Paraphrase Database to Compositional Paraphrase Model and Back (Wieting)
         //iw.init("rte3_babak2","umbc_paragram_best");
         //iw.init("rte3_test_gold","umbc_paragram_best");
-        iw.init("rte3_babak3_normalisasi","umbc_paragram");
+         iw.init("rte3_test_normal","umbc_paragram");
         //iw.init("rte3_babak2","umbc_paragram");
         //iw.init("rte3_babak2","umbc_glove_w2c"); //gabungan antara w2c dan glove (rata2? max? min?)
         //iw.init("rte3_test_gold","umbc_w2v_fix1"); //hanya w2v, tapi berdasarkan fix1

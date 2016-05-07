@@ -14,11 +14,14 @@ import java.util.logging.Level;
 public class ProsesPasif {
 
     public static void main(String[] args) {
+
         Connection conn;
         PreparedStatement pSel;
         PreparedStatement pUpdate;
         String strSel;
         String strUpdate;
+
+        //set nama tabel langsung di query
         //strSel       = String.format("select id,t,h from rte3_babak3");
         //strUpdate    = String.format("update rte3_babak3 set h_normal=?, t_normal=? where id=?");
 
