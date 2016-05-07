@@ -4,8 +4,10 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.util.CoreMap;
 
 import java.io.*;
@@ -24,25 +26,145 @@ import java.util.regex.Pattern;
  */
 
 public class Prepro {
-    Logger logger;
+    Logger logger = Logger.getLogger(Prepro.class.getName());
     public String dbName;
     public String userName;
     public String password;
     private ArrayList<String> alStopWords = new ArrayList<>();
+    private StanfordCoreNLP pipeline=null;
+    private StanfordCoreNLP pipelineSplitKata=null;
+    private LexicalizedParser lp;  //untuk parsing PosTag dan Dep Parser
 
-    private StanfordCoreNLP pipeline;
+
+    /**
+     *    loading model
+     *
+     */
+    public void initPosTagDep() {
+        //panggil sebelum lakukan parsing
+        lp = new LexicalizedParser("edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz","-maxLength", "80", "-retainTmpSubcategories");
+    }
+
+    public String[] parse(String sen) {
+        //IS: initPosTagDep harus dipanggil lebih dulu
+        //output: string[0] adalah syntatic
+        //        string[1] adalah dependency tree
+        //hasilnya sama dengan yg di online (lebih bagus)
+        //lebih simpel
+
+        String[] out = new String[2];
+        String kata = sen;
+
+        Tree parseTree = lp.apply(kata);
+        TreebankLanguagePack tlp = new PennTreebankLanguagePack();
+        GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory();
+        GrammaticalStructure gs = gsf.newGrammaticalStructure(parseTree);
+        Collection<TypedDependency> tdl = gs.typedDependenciesCCprocessed();
+        out[0] = parseTree.toString();
+        out[1] = tdl.toString();
+
+        return out;
+    }
+
+    /**
+     *  memproses postag dan dependency tree menggunakan stanford parser
+     *  dari input, outPostTag dan outDependency terisi
+     *
+     *
+     * @param namaTabel
+     * @param namaFieldId
+     * @param namaFieldInput
+     *
+     */
+    public void isiFieldPosTagDep (String namaTabel, String namaFieldId, String namaFieldInput,
+                                   String namaFieldOutPosTag,String namaFieldOutDependency)
+
+    {
+        Connection conn=null;
+        PreparedStatement pSel=null;
+        PreparedStatement pUpd=null;
+
+        ResultSet rs = null;
+        KoneksiDB db = new KoneksiDB();
+        try {
+            logger.log(Level.INFO,"Mulai parsing postag + dependency tree");
+            conn = db.getConn();
+            initPosTagDep();
+            pSel = conn.prepareStatement(String.format("select %s,%s from %s",namaFieldInput,namaFieldId,namaTabel)); //"select t,h,id from "+namaTabel);
+            pUpd = conn.prepareStatement(String.format("update %s set %s=?,%s=? where %s=?",namaTabel,namaFieldOutPosTag,namaFieldOutDependency,namaFieldId));
+
+            rs = pSel.executeQuery();
+            while (rs.next()) {
+                String text = rs.getString(1);
+                int id = rs.getInt(2);
+                System.out.println(id);
+                String[] outT = parse(text);
+
+                System.out.println(outT[0]);
+                System.out.println(outT[1]);
+
+                pUpd.setString(1, outT[0]);
+                pUpd.setString(2, outT[1]);
+                pUpd.setInt(3, id);
+                try {
+                    //todo aneh.. kena error terus karena kegedaan, coba dicatch dulu
+                    pUpd.executeUpdate();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    System.out.println("error");
+                    pUpd.setString(1, "error");
+                    pUpd.setString(2, "error");
+                    pUpd.setInt(3, id);
+                    pUpd.executeUpdate();
+                }
+            }
+            rs.close();
+            pSel.close();
+            conn.close();
+            logger.log(Level.INFO,"selesai");
+        } catch(Exception ex) {
+            ex.printStackTrace();
+        }
+
+    }
+
+
+
 
 
 
 
     //kalau dapat error
     //Unrecoverable error while loading a tagger model
-    // Unable to resolve "edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger"
+    // Unable to resolve "edu/stanford/nlp/models/pos-tagger/english-left3words/
+    // english-left3words-distsim.tagger"
 
     public void initLemma() {
         Properties props = new Properties();
         props.put("annotators", "tokenize, ssplit, pos, lemma");
         pipeline = new StanfordCoreNLP(props);
+    }
+
+
+    //dipanggil sebelum split token
+    public void initSplitKalimat() {
+        Properties props = new Properties();
+        props.put("annotators", "tokenize, ssplit");
+        pipelineSplitKata = new StanfordCoreNLP(props);
+    }
+
+    //initsplittoken harus dipanggil terlebih dulu
+    public ArrayList<String> splitKalimat(String par) {
+
+        ArrayList<String> alOut = new ArrayList<String>();
+        Annotation docT = new Annotation(par);
+        pipelineSplitKata.annotate(docT);
+        List<CoreMap> sentencesT = docT.get(CoreAnnotations.SentencesAnnotation.class);
+        for(CoreMap kalimat: sentencesT) {
+            //System.out.println(kalimat.toString());
+            alOut.add(kalimat.toString());
+        }
+        return alOut;
     }
 
     //IS: init lema sudah dipangggil!
@@ -376,9 +498,15 @@ public class Prepro {
            return out;
        }
 
+
+
+
     /*
         token2 ini mungkin nanti dipisahkan ke kelas lain aja ya
+        [0]: token
+        [1]: kelimat sisa dikurangi token
     */
+
     public Object[] ambilTokenUang(String kal, String ner) {
         Object[] out = new Object[2];
         ArrayList<String> alToken = ambilSatuJenisNER("MONEY",ner);
@@ -501,6 +629,36 @@ public class Prepro {
         return out;
     }
 
+    /*
+        berdasarkan kalimat dan ner, ambil token tanggal,
+        lalu buang token tersebut dari kalimat
+        output : [0] ArrayList<String>  berisi token
+                 [1] String kalimat sisa
+
+        perlu dilowercase, recently = Recently
+     */
+    public Object[] ambilTokenLokasi(String kal, String ner) {
+        Object[] out = new Object[2];
+        ArrayList<String> alToken = ambilSatuJenisNER("LOCATION",ner);
+        ArrayList<String> alToken2 = new ArrayList<>();
+        for (String s:alToken) {
+            alToken2.add(s.toLowerCase()); //jadikan lowercase
+        }
+        out[0] = alToken2;  //perlu lowercase karena misal: Recently dengan recently harusnya sama
+
+        //buang dari kalimat
+        //perlu buang yg panjang lebih dulu
+        //misal: August of 1799 harus dibuang duluan sebelum 1799
+        //kalau terbalik maka akan ada sisa August of
+        ComparatorPanjangKalimat comparator = new ComparatorPanjangKalimat(false);
+        java.util.Collections.sort(alToken, comparator);
+        for (String t:alToken) {
+            kal = kal.replaceAll(Pattern.quote(t),""); //harus tetap pake token bukan token2
+        }
+        out [1] = kal;
+        return out;
+    }
+
 
        public static void main(String[] args) {
            Prepro pp = new Prepro();
@@ -548,6 +706,7 @@ public class Prepro {
            */
 
            //testing ambil token NER
+           /*
            String kal = "Jerry Reinsdorf (born February 25 1936 in Brooklyn, New York) is the owner of Chicago White " +
                    "Sox and the Chicago Bulls. Recently, he helped the White Sox win the 2005 World Series and, in " +
                    "the process, collected his seventh championship ring overall (the first six were all with the " +
@@ -567,7 +726,29 @@ public class Prepro {
            }
            System.out.println("kal:"+kal);
            System.out.println("Sisa kal:"+sisaKal);
-
+           */
            //pp.fileStopwordsToDB("D:\\desertasi\\eksperimen\\stopwords_washedu.txt","stopwords2","kata");
+
+           //test ambil multikalimat dalam satu paragraph
+           /*
+           pp.initSplitKalimat();
+           ArrayList<String> alKal = pp.splitKalimat("The Prime Minister of Spain Zapatero visited Brazil, Argentina, Chile and Uruguay recently, in a effort to build a left axis in South America. The cited countries' South American Presidents agreed to collaborate at international level, particularly in the United Nations , European Union and with Paris, Berlin and Madrid.");
+           for (String s:alKal) {
+               System.out.println(s);
+           }
+           */
+
+           //test parse postTag dan dep parser
+           /*
+           pp.initPosTagDep();
+           String[] hasil  =  pp.parse("Subject have recorded as much as 200 mm of rain in portions of British Columbia on the west coast of Canada since Monday.");
+           System.out.println("syn:"+hasil[0]);
+           System.out.println("dep:"+hasil[1]);
+           */
+
+           //isi postag dan dep parser untuk field yang sudah dinormalisasi
+           //pp.isiFieldPosTagDep("rte3_babak3","id","t_normal","t_normal_gram_structure","t_normal_type_dependency");
+           //pp.isiFieldPosTagDep("rte3_babak3","id","h_normal","h_normal_gram_structure","h_normal_type_dependency");
+           pp.isiFieldPosTagDep("rte3_test_normal","id","h","h_gram_structure","h_type_dependency");
        }
 }

@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  * Dipanggil oleh IsiWordEmbedUmbc
  *
  *   fix1: perbaikan proses tgl, angka, buang dash
- *
+ *   fix3: penalti untuk kesamaan lokasi
  */
 
 public class SimGroupToken {
@@ -56,8 +56,10 @@ public class SimGroupToken {
      */
 
     final static  double  penaltiAngka = 1;  //umbc: 1
+    final static  double  penaltiLokasi = 0.5; //umbc: tdk ada
     final static  double  penaltiTgl = 0.5;  //umbc: 0.5
     final static  double  penaltiUang = 0.5; //umbc: 0.5
+
     final static  double  penaltiKataVerbNoun = 1;  //umbc 1
     final static  double  penaltiKataLain = 0.5;    //umbc 0.5
     final static  double  batasPenaltiKata = 0.25;
@@ -221,8 +223,36 @@ public class SimGroupToken {
 
         //cari mulai dari H
 
-        //uang
+        //lokasi
+        //tambah lokasi malah jadi turun ya
+        //kalau dihilangkan jangan lupa update perhitungan jumlah token dibawah
+        //lalu lihat juga di class GroupToken
 
+        /*
+        if (gtH.tokenLokasi.size()>0) {
+            for (String sH: gtH.tokenLokasi) {
+                System.out.println("Cari lokasi:"+sH);
+                boolean ketemuCocok = false;
+                for (String sT: gtT.tokenLokasi) {
+                    if (sH.equals(sT)) {
+                        ketemuCocok = true;
+                        totalSkor++;
+                        //totalSkorKali = totalSkorKali * 1; //cuma supaya jelas saja, bisa dibuang baris ini
+                        System.out.println(sH+"->"+sT);
+                        break; //proses sH berikutnya
+                    }
+                }
+                if (!ketemuCocok) { //kena penalti
+                    double penalti = penaltiLokasi;
+                    totalPenalti = totalPenalti+penalti;
+                    //totalPenaltiKali = totalPenaltiKali * penalti;
+                    System.out.println("Tdk ada pasangan, kena penalti:"+sH+"("+penalti+")");
+                }
+            }
+        }
+        */
+
+        //uang
         if (gtH.tokenUang.size()>0) {
             for (String sH: gtH.tokenUang) {
                 System.out.println("Cari uang:"+sH);
@@ -348,6 +378,13 @@ public class SimGroupToken {
         //perlu dicari nilai maksimum
         for (String vH:gtH.tokenKata) {
             double maxSkor = 0; //makin besar makin bagus, makin similar
+
+            //hack jika menggunakan konversi pasif ke aktif
+            /*
+            if (vH.equals("subject")) {
+                continue;
+            }
+            */
             String strTercocok="";
             //loop untuk setiap T
             for (String vT:gtT.tokenKata) {
@@ -368,8 +405,7 @@ public class SimGroupToken {
                     if (    (vH.equals("i")&&vT.equals("me"))    ||
                             (vH.equals("she")&&vT.equals("her"))  ||
                             (vH.equals("he")&&vT.equals("him"))   ||
-                            (vH.equals("they")&&vT.equals("them"))   ||
-                            (vH.equals("he")&&vT.equals("him"))
+                            (vH.equals("they")&&vT.equals("them"))
                             ) {
                         maxSkor=1;
                         strTercocok = vT;
@@ -526,7 +562,8 @@ public class SimGroupToken {
         */
 
 
-        int jumToken = gtH.tokenUang.size()+gtH.tokenTgl.size()+gtH.tokenAngka.size()+gtH.tokenKata.size();
+        int jumToken = gtH.tokenUang.size()+gtH.tokenTgl.size()+
+                gtH.tokenAngka.size()+gtH.tokenKata.size(); //+gtH.tokenLokasi.size();
 
         //penalti negatif
         //out = (totalSkor / jumToken) - (totalPenalti / jumToken) - skorPenaltiNeg; //tidak perlu dikali 2 karena hanya dari H->T (tidak bolakbalik)
@@ -561,28 +598,30 @@ public class SimGroupToken {
     public static void main(String[] args) {
         //debug
 
-
+        /*
         String t = "After his release, the clean-shaven Magdy el-Nashar told reporters outside his home that he had " +
                 "nothing to do with the July 7 transit attacks, which killed 52 people and the four bombers.";
         String tNer = "PERSON=Magdy el-Nashar;DATE=July 7;NUMBER=52;NUMBER=four;";
         String h = "52 people and four bombers were killed on July 7.";
         String hNer = "NUMBER=52;NUMBER=four;DATE=July 7;";
-
+        */
 
         /*
         String t = "Take consumer products giant Procter and Gamble. Even with a $1.8 billion Research and Development " +
                 "budget, it still manages 500 active partnerships each year, many of them with small companies.";
         String h = "500 small companies are partners of Procter and Gamble.";
-        */
+
         GroupToken gtT = new GroupToken();
         gtT.ambilToken(t,tNer);
 
         GroupToken gtH = new GroupToken();
         gtH.ambilToken(h,hNer);
 
+        */
+
         //D:\eksperimen\paragram\paragram_300_sl999\paragram_300_sl999\paragram_300_sl999.txt
 
-
+        /*
         SimGroupToken sgt = new SimGroupToken("D:\\eksperimen\\glove\\glove.6B.300d.txt",
                 "D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz");
 
@@ -590,6 +629,7 @@ public class SimGroupToken {
         sgt.setGroupToken(gtT,gtH);
         double skor = sgt.getSim();
         System.out.println("skor:"+skor);
+        */
     }
 
 }

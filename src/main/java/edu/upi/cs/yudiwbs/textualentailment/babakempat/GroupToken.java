@@ -12,6 +12,8 @@ public class GroupToken {
     ArrayList<String> tokenTgl;
     ArrayList<String> tokenUang;
     ArrayList<String> tokenAngka;
+    ArrayList<String> tokenLokasi;
+
     Prepro pp = new Prepro();
 
     public GroupToken() {
@@ -43,6 +45,7 @@ public class GroupToken {
         }
         //System.out.println("sisa="+sisaKal);
 
+        //angka
         objOut = pp.ambilTokenAngka(sisaKal,ner);
         tokenAngka = (ArrayList<String>) objOut[0];
         sisaKal = (String) objOut[1];
@@ -50,6 +53,17 @@ public class GroupToken {
         for (String s:tokenAngka) {
             System.out.println(s);
         }
+
+        //lokasi
+        /*
+        objOut = pp.ambilTokenLokasi(sisaKal,ner);
+        tokenLokasi = (ArrayList<String>) objOut[0];
+        sisaKal = (String) objOut[1];
+        System.out.println("Ambil Lokasi:");
+        for (String s:tokenLokasi) {
+            System.out.println(s);
+        }
+        */
 
         //utk person dan organiszation perlu?? --> nanti dicoba
 

@@ -42,7 +42,7 @@ public class ProsesIsA {
                 System.out.println("id:"+id);
 
                 //proses disini
-                
+
 
 
 
