@@ -41,11 +41,11 @@ public class Prepro {
      *
      */
     public void initPosTagDep() {
-        //panggil sebelum lakukan parsing
+        //panggil sebelum lakukan parsing syntatic dan dependency
         lp = new LexicalizedParser("edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz","-maxLength", "80", "-retainTmpSubcategories");
     }
 
-    public String[] parse(String sen) {
+    public String[] parsePosTagDep(String sen) {
         //IS: initPosTagDep harus dipanggil lebih dulu
         //output: string[0] adalah syntatic
         //        string[1] adalah dependency tree
@@ -98,7 +98,7 @@ public class Prepro {
                 String text = rs.getString(1);
                 int id = rs.getInt(2);
                 System.out.println(id);
-                String[] outT = parse(text);
+                String[] outT = parsePosTagDep(text);
 
                 System.out.println(outT[0]);
                 System.out.println(outT[1]);
@@ -153,7 +153,7 @@ public class Prepro {
         pipelineSplitKata = new StanfordCoreNLP(props);
     }
 
-    //initsplittoken harus dipanggil terlebih dulu
+    //initSplitKalimat harus dipanggil terlebih dulu
     public ArrayList<String> splitKalimat(String par) {
 
         ArrayList<String> alOut = new ArrayList<String>();
@@ -749,6 +749,6 @@ public class Prepro {
            //isi postag dan dep parser untuk field yang sudah dinormalisasi
            //pp.isiFieldPosTagDep("rte3_babak3","id","t_normal","t_normal_gram_structure","t_normal_type_dependency");
            //pp.isiFieldPosTagDep("rte3_babak3","id","h_normal","h_normal_gram_structure","h_normal_type_dependency");
-           pp.isiFieldPosTagDep("rte3_test_normal","id","h","h_gram_structure","h_type_dependency");
+           pp.isiFieldPosTagDep("rte3_test_normal","id","t","t_gram_structure","t_type_dependency");
        }
 }

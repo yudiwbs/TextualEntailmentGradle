@@ -135,7 +135,7 @@ public class ProsesNER {
            ProsesNER cn = new ProsesNER();
            //cn.prosesDb("rte3_test_gold","t","t_ner");
            //cn.prosesDb("rte3_test_gold","h","h_ner");
-           cn.prosesDb("rte3_babak3_normalisasi","t","t_ner");
+           cn.prosesDb("rte3_test_normal","h","h_ner");
            //cn.prosesDb("rte3_babak2","t","t_ner");
 
            //cn.prosesDb("disc_t_rte3_label","t","t_ner");

@@ -63,8 +63,8 @@ public class SimGroupToken {
     final static  double  penaltiKataVerbNoun = 1;  //umbc 1
     final static  double  penaltiKataLain = 0.5;    //umbc 0.5
     final static  double  batasPenaltiKata = 0.25;
-    final static  double  penaltiSubjTdkCocok = 1;
-    final static  double  penaltiKalNeg = 0.5;  //
+    final static  double  penaltiSubjTdkCocok = 1;   //coba dgn 2 dan 3 hasilnya buruk
+    final static  double  penaltiKalNeg = 1;  //
 
     //inisialisasinya bisa digabung nanti
     public void setTH(String t, String h) {
@@ -326,7 +326,7 @@ public class SimGroupToken {
                 String strTCocok="";
                 for (String sT : gtT.tokenTgl) {
                     //cari tahun
-                    Matcher mT = pTahun.matcher(sH);
+                    Matcher mT = pTahun.matcher(sT);
                     ArrayList<String> alTahunT = new ArrayList<>();
                     while (mT.find()) {
                         alTahunT.add(mT.group());
@@ -379,12 +379,12 @@ public class SimGroupToken {
         for (String vH:gtH.tokenKata) {
             double maxSkor = 0; //makin besar makin bagus, makin similar
 
-            //hack jika menggunakan konversi pasif ke aktif
-            /*
+            //hack: jika menggunakan konversi pasif ke aktif
+            //
             if (vH.equals("subject")) {
                 continue;
             }
-            */
+
             String strTercocok="";
             //loop untuk setiap T
             for (String vT:gtT.tokenKata) {
@@ -465,8 +465,8 @@ public class SimGroupToken {
                 //kalau tidak sama harusnya kena penalti
 
                 //hanya proses kalau vH adalah verb dan tidak kena penalti
-
                 /*
+
                 if (itH.alVerb.contains(vH)) {
                     boolean subjCocok = cekSubjCocok(vH, strTercocok);
                     if (subjCocok) {
@@ -477,7 +477,8 @@ public class SimGroupToken {
                         totalPenalti = totalPenalti+penalti;
                     }
                 }
-                */  //end pengecekan subyek
+                //end pengecekan subyek
+                */
             }
 
             /*
@@ -535,7 +536,7 @@ public class SimGroupToken {
         //hitung penalti kalau salah satu adalah kalimat negatif
         //atau kalimat tidak langsung
 
-        /*
+
         CekKalimatNegatif ck = new CekKalimatNegatif();
         StructCariKalNegatif tNeg = ck.isKalimatNegatif(itT);
         StructCariKalNegatif hNeg = ck.isKalimatNegatif(itH);
@@ -549,6 +550,7 @@ public class SimGroupToken {
 
             //kasus yg paling umum
             //harus dicek apakah verb di H ada di bagian verb not
+            //tapi mungkin harusnya dicek verb yang langsung berurutan!
             if ((tNeg.isNegatif) && hmVerbHT.containsValue(tNeg.verb))  {
                 skorPenaltiNeg = penaltiKalNeg;
                 System.out.println("KENA PENALTI NEGATIF");
@@ -559,17 +561,17 @@ public class SimGroupToken {
             //diignore saja
 
         }
-        */
+
 
 
         int jumToken = gtH.tokenUang.size()+gtH.tokenTgl.size()+
                 gtH.tokenAngka.size()+gtH.tokenKata.size(); //+gtH.tokenLokasi.size();
 
         //penalti negatif
-        //out = (totalSkor / jumToken) - (totalPenalti / jumToken) - skorPenaltiNeg; //tidak perlu dikali 2 karena hanya dari H->T (tidak bolakbalik)
+        out = (totalSkor / jumToken) - (totalPenalti / jumToken) - skorPenaltiNeg; //tidak perlu dikali 2 karena hanya dari H->T (tidak bolakbalik)
 
         //tanpa penalti negatif
-        out = (totalSkor / jumToken) - (totalPenalti / jumToken); //tidak perlu dikali 2 karena hanya dari H->T (tidak bolakbalik)
+        //out = (totalSkor / jumToken) - (totalPenalti / jumToken); //tidak perlu dikali 2 karena hanya dari H->T (tidak bolakbalik)
 
         //out = (totalSkorKali / (jumToken)) - (totalPenaltiKali / (jumToken)); //tidak perlu dikali 2 karena hanya dari H->T (tidak bolakbalik)
 
