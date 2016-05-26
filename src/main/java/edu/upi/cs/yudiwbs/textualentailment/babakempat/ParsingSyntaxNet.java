@@ -62,108 +62,35 @@ import java.util.Scanner;
 
 public class ParsingSyntaxNet {
 
-
-
-    //isi dari satu baris file2
-    //24	and	_	CONJ	CC	_	23	_	_
-    //id    kata    POS     rel   parent
-    private class DataDepTree {
-        String id;
-        String kata;
-        String posUmum;
-        String posKhusus;
-        String rel;
-        String parent;
-
-        @Override
-        public String toString() {
-            StringBuilder sb = new StringBuilder();
-            sb.append("id:"+id);
-            sb.append("\n");
-            sb.append("kata:"+kata);
-            sb.append("\n");
-            sb.append("pos Umum:"+posUmum);
-            sb.append("\n");
-            sb.append("pos Khusus:"+posKhusus);
-            sb.append("\n");
-            sb.append("rel:"+rel);
-            sb.append("\n");
-            sb.append("parent:"+parent);
-            return sb.toString();
-        }
-
-        public  DataDepTree(String s) {
-            //parsing
-            //3	    was	  _	  VERB	 VBD	_	4	     auxpass	_	_
-            //id    kata      POS     rel       parent   rel
-            //0     1     2   3       4     5   6        7
-            Scanner sc = new Scanner(s);
-            int cc = 0;
-            while (sc.hasNext()) {
-                String k = sc.next();
-
-                if (cc == 0) {
-                    id = k;
-                } else if (cc ==1) {
-                    kata = k;
-                } else if (cc ==3) {
-                    posUmum = k;
-                } else if (cc==4) {
-                    posKhusus = k;
-                } else if (cc==6) {
-                    parent = k;
-                }  else if (cc==7) {
-                    rel = k;
-                }
-                cc++;
-            }
-        }
-
-    }
-
-
-
     /*
         load dari file text hasil syntaxnet
-
      */
-    public ArrayList<ArrayList<DataDepTree>>  load(String file1, String file2) {
-        Scanner scRef = new Scanner(file1);
+    public ArrayList<SentenceDepTree> load(String file) {
+        //Scanner scRef = new Scanner(file1);
 
         Scanner scData = null;
         try {
-            scData = new Scanner(new File(file2));
+            scData = new Scanner(new File(file));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
 
-        ArrayList<ArrayList<DataDepTree>> alSemuaSentence  = new ArrayList<>();
+        ArrayList<SentenceDepTree> alSemuaSentence  = new ArrayList<>();
 
-        ArrayList<DataDepTree>  alSentence = new ArrayList<>();
+        SentenceDepTree  sentence = new SentenceDepTree();
         while (scData.hasNextLine()) {
             String ln = scData.nextLine().trim();
             if (ln.equals("")) {
                 //break sentence
-                alSemuaSentence.add(alSentence); //teambah setnence
-                alSentence = new ArrayList<>();
+                alSemuaSentence.add(sentence); //teambah setnence
+                sentence = new SentenceDepTree();
+            } else {
+                //System.out.println("line:"+ln);
+                DataDepTree d = new DataDepTree(ln);
+                sentence.add(d);
             }
-            //System.out.println("line:"+ln);
-            DataDepTree d = new DataDepTree(ln);
-            alSentence.add(d);
-            //System.out.println(d);
-            //break; //debug, satu baris dulu
         }
-
-        for (ArrayList<DataDepTree>  als: alSemuaSentence) {
-            //als itu per kalimat dalams satu par
-            for (DataDepTree d: als) {
-                System.out.println(d);
-            }
-            break; //testing satu dulu
-        }
-
         return alSemuaSentence;
-
     }
 
 

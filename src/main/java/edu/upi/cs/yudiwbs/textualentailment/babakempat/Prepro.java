@@ -285,7 +285,8 @@ public class Prepro {
         if (buangSelainHuruf) {
             //buang selaing alphanumerik
             //underscore dibiarkan krn berguna untuk word2vec
-            str2 = str.replaceAll("[^A-Za-z_\\_]", " ").replaceAll("\\s+", " ").trim();
+            //update 26 mei, angka masuk saja
+            str2 = str.replaceAll("[^A-Za-z0-9_]", " ").replaceAll("\\s+", " ").trim();
         } else {
             str2 = str; //tidak dibbuang
         }
@@ -307,6 +308,7 @@ public class Prepro {
 
     public void loadStopWords(String namaTabel,String namaField) {
         //memindahkan data stopwords dari tabel ke memori alStopWords
+        //FS: alStopWords terisi
         System.out.println("loadStopWords");
         Connection conn=null;
         PreparedStatement pSel=null;
@@ -662,9 +664,13 @@ public class Prepro {
 
        public static void main(String[] args) {
            Prepro pp = new Prepro();
+           pp.loadStopWords("stopwords2","kata");
+           //String out = pp.loadKataTanpaStopWordstoString("halo Bandung yudi's home air&air 123 and underscore_boleh",true,true);
+           String out = pp.loadKataTanpaStopWordstoString("George Herbert Walker Bush (born June 12, 1924) is the former 41st President of the United States of America. Almost immediately upon his return from the war in December 1944, George Bush married Barbara Pierce.",true,true);
+           System.out.println(out);
 
            //pp.loadStopWords("stopwords","kata");
-           ArrayList<String> out ;
+           //ArrayList<String> out ;
            /*
            ArrayList<String> out = pp.loadKataTanpaStopWords("The sale was made to pay Yukos' " +
                    "US$ 27.5 billion tax bill, Yuganskneftegaz was originally sold for US$ 9.4 " +
@@ -749,6 +755,6 @@ public class Prepro {
            //isi postag dan dep parser untuk field yang sudah dinormalisasi
            //pp.isiFieldPosTagDep("rte3_babak3","id","t_normal","t_normal_gram_structure","t_normal_type_dependency");
            //pp.isiFieldPosTagDep("rte3_babak3","id","h_normal","h_normal_gram_structure","h_normal_type_dependency");
-           pp.isiFieldPosTagDep("rte3_test_normal","id","t","t_gram_structure","t_type_dependency");
+           //pp.isiFieldPosTagDep("rte3_test_normal","id","t","t_gram_structure","t_type_dependency");
        }
 }
