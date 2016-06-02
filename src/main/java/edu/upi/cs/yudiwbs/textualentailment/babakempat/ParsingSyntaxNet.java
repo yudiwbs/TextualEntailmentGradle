@@ -76,7 +76,6 @@ public class ParsingSyntaxNet {
         }
 
         ArrayList<SentenceDepTree> alSemuaSentence  = new ArrayList<>();
-
         SentenceDepTree  sentence = new SentenceDepTree();
         while (scData.hasNextLine()) {
             String ln = scData.nextLine().trim();

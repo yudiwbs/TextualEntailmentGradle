@@ -139,9 +139,9 @@ public class ProsesLemma {
 
         //pl.proses("80% approve of Mr. Bush.");
         //pl.proses("Mrs. Bush 's approval ratings have remained very high , above 80 ");
-        pl.proses("mrs");
+        //pl.proses("mrs");
         //.proses("Mrs. Bush 's approval ratings have remained very high , above 80 %");
-        //pl.proses("A man suspected of stealing a million-dollar collection of Nepalese and Tibetan art objects in New York was arrested.");
+        pl.proses("A man suspected of stealing a million-dollar collection of Nepalese and Tibetan art objects in New York was arrested.");
         //
     }
 }
