@@ -27,19 +27,21 @@ public class ParagraphDepTree {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("id:"+id+" ; Jum kal asli:"+alKalimatAsli.size());
+        sb.append("id:"+id); //Jum kal asli:"+alKalimatAsli.size()
         sb.append(System.lineSeparator());
-        sb.append("Jum kal dep tree:"+alSenDepTree.size());
-        sb.append(System.lineSeparator());
+        //sb.append("Jum kal dep tree:"+alSenDepTree.size());
+        //sb.append(System.lineSeparator());
         for (String s:alKalimatAsli) {
             sb.append(s);
             sb.append(System.lineSeparator());
         }
 
+        /*
         for (SentenceDepTree s:alSenDepTree) {
             sb.append(s);
             sb.append(System.lineSeparator());
         }
+        */
 
         return sb.toString();
     }

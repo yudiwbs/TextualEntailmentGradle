@@ -14,17 +14,14 @@ import java.util.ArrayList;
 public class SentenceDepTree {
 
 
-
-
-
     ArrayList<DataDepTree> alDataDepTree = new ArrayList<>();
 
     //cari obyek & subyek nanti kelas prosesSubjObjSyntaxNet bisa digabung ke sini
-    ArrayList<Root> alRoot = new ArrayList<>();
+    ArrayList<Predikat> alPredikat = new ArrayList<>();
 
     //ambil subyek, obyek dan root:
     //FS: alRoot terisi
-    //objek prepro dipassing agar tidak berat untuk setiap load
+    //objek prepro dipassing agar tidak berat untuk setiap pemanggilan
     public void prosesRootSubyekObyek(Prepro pp) {
         //bisa lebih dari satu, misal suby pasif (atau dipisah?)
         //ArrayList<String> alSubyekOby = new ArrayList<>();
@@ -49,8 +46,8 @@ public class SentenceDepTree {
                 if (verbParent.equals("")) {
                     continue; //tidak diproses kalu tidak ada rootnya
                 }
-                Root r = new Root();
-                r.root = verbParent;
+                Predikat r = new Predikat();
+                r.predikat = verbParent;
                 //cari semua childnya kalau ada, jadi bisa diambil kalau frase
                 ArrayList<DataDepTree> alChild = this.getChild(d.id);
                 alData.addAll(alChild);
@@ -71,7 +68,7 @@ public class SentenceDepTree {
                 if (!r.instance.equals("")) {
                 //cek subyek/obyek tidak boleh kosong. Misalnya ada subyek which,
                 // kena stopword rem jadi hilang
-                    alRoot.add(r);
+                    alPredikat.add(r);
                 }
                 //tidak dicek duplikasi karena yang penting adalah rootnya
                 //kecuali kalau rootnya juga dobel?

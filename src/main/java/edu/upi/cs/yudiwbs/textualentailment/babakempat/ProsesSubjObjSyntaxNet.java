@@ -15,8 +15,8 @@ import java.util.logging.Logger;
  * Created by yudiwbs on 24/05/2016.
  * berdasarkan hasil dep parsing Syntaxnet, tentukan subj dan obj
  *
- *
- *
+
+ jangan gunakan class ini sebagai referensi, baca class ProseRootSyntaxNet
 
 
  masih bug:
@@ -775,14 +775,7 @@ import java.util.logging.Logger;
 
 public class ProsesSubjObjSyntaxNet {
 
-    private class HasilTebak {
-        double nilai;   //nilai prediksi 0 sd 1. 1 artinya semakin mirip
-        String tebakan; //yang paling mendkati
-        public HasilTebak(double nilai, String tebakan) {
-            this.nilai = nilai;
-            this.tebakan = tebakan;
-        }
-    }
+
 
     /*
        contoh:
@@ -821,6 +814,7 @@ public class ProsesSubjObjSyntaxNet {
 
     WordVectors vecGlove  = null;
 
+    //constructor
     public ProsesSubjObjSyntaxNet () {
         String fileVecGlove = "D:\\eksperimen\\paragram\\paragram_300_sl999\\paragram_300_sl999\\paragram_300_sl999.txt";
         try {
@@ -859,6 +853,7 @@ public class ProsesSubjObjSyntaxNet {
         double maxSkor = 0;
         String maxKata = "";
 
+        //cari yg paling similar
         for (String sKata:alKal) {
             double skorSim = simKata(sKata,root);
             if ( skorSim > maxSkor ) {
@@ -871,9 +866,10 @@ public class ProsesSubjObjSyntaxNet {
         return out;
     }
 
-
+    //dicopy paste di class ProsesRootSyntaxNet
     //mencari subkal di dalam kalimat saat subkal tidak ada secara eksak di kalimat
     //memperhitungkan kata yg ditukar, sinonim
+    //menggunakan sistem window
     public HasilTebak tebak(String kalimat,String subKal) {
         HasilTebak out;
         double batasCocok = 0.7;  //untuk glove
@@ -1040,6 +1036,10 @@ public class ProsesSubjObjSyntaxNet {
         return out;
     }
 
+    /*
+
+    */
+
     public void proses() {
         //load T mentah (tdk displit)
 
@@ -1056,8 +1056,6 @@ public class ProsesSubjObjSyntaxNet {
 
         Prepro pp = new Prepro();
         pp.loadStopWords("stopwords2","kata");
-
-
 
         try {
             Scanner sc = new Scanner(new File(fileT));
