@@ -7,8 +7,10 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
- * Created by yudiwbs on 25/04/2016.
+ * lihat ProsesKalimatNegatif
  *
+ *
+ * Created by yudiwbs on 25/04/2016.
  * mengecek apakah suatu kalimat negatif
  *
  *
@@ -16,6 +18,8 @@ import java.util.Scanner;
  *  and pull bottles from store shelves nation wide, spokesman Mike DeAngelis said.
  *
  *
+
+
 
  (ROOT (S (NP (NNP CVS)) (VP (MD will) (RB not) (VP (VB sell) (NP (NP (PRP$ its)
  (JJ own) (NN brand)) (PP (IN of) (NP (JJ 500-milligram) (NN acetaminophen)
@@ -60,11 +64,11 @@ import java.util.Scanner;
  *
  */
 
-public class CekKalimatNegatif {
+public class OLD_CekKalimatNegatif {
 
     Prepro pp;
 
-    public CekKalimatNegatif() {
+    public OLD_CekKalimatNegatif() {
         pp = new Prepro();
         pp.loadStopWords("stopwords2","kata");
     }
@@ -140,7 +144,7 @@ public class CekKalimatNegatif {
             pSel = conn.prepareStatement(strSel);
 
             rs = pSel.executeQuery();
-            CekKalimatNegatif ck = new CekKalimatNegatif();
+            OLD_CekKalimatNegatif ck = new OLD_CekKalimatNegatif();
             while (rs.next()) {
                 //id,t,h, t_gram_structure, h_gram_structure
                 int id = rs.getInt(1);

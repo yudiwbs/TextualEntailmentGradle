@@ -3,8 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/TextualEntailmentGradle.iml" filepath="$PROJECT_DIR$/.idea/modules/TextualEntailmentGradle.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/TextualEntailmentGradle_main.iml" filepath="$PROJECT_DIR$/.idea/modules/TextualEntailmentGradle_main.iml" group="TextualEntailmentGradle" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/TextualEntailmentGradle_test.iml" filepath="$PROJECT_DIR$/.idea/modules/TextualEntailmentGradle_test.iml" group="TextualEntailmentGradle" />
     </modules>
   </component>
 </project>

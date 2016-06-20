@@ -24,4 +24,5 @@ dependencies {
     compile "com.joestelmach:natty:0.6"
     compile "net.sf.extjwnl:extjwnl:1.9.1"
     compile "net.sf.extjwnl:extjwnl-data-wn31:1.2"
+    compile group: 'postgresql', name: 'postgresql', version: '9.1-901-1.jdbc4'
 }

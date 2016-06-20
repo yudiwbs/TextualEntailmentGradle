@@ -1,19 +1,12 @@
 package edu.upi.cs.yudiwbs.textualentailment.babakempat;
 
-import com.mdimension.jchronic.Chronic;
 import com.mdimension.jchronic.Options;
-import com.mdimension.jchronic.utils.Span;
-import net.sf.extjwnl.data.POS;
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -537,7 +530,7 @@ public class SimGroupToken {
         //atau kalimat tidak langsung
 
 
-        CekKalimatNegatif ck = new CekKalimatNegatif();
+        OLD_CekKalimatNegatif ck = new OLD_CekKalimatNegatif();
         StructCariKalNegatif tNeg = ck.isKalimatNegatif(itT);
         StructCariKalNegatif hNeg = ck.isKalimatNegatif(itH);
 

@@ -1,5 +1,5 @@
 <component name="libraryTable">
-  <library name="Gradle: com.github.fommil.netlib:netlib-native_system-win-i686:natives:1.1">
+  <library name="Gradle: com.github.fommil.netlib:netlib-native_system-win-i686:1.1:natives">
     <CLASSES>
       <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.github.fommil.netlib/netlib-native_system-win-i686/1.1/c25fd1881cf93f7716f47b7deec859f6b6b7be50/netlib-native_system-win-i686-1.1-natives.jar!/" />
     </CLASSES>
