@@ -7,19 +7,13 @@ import java.sql.ResultSet;
 /**
  * Created by yudiwbs on 03/04/2016.
  *
- *   INI SUDAH YG TERBAIK (umbc_paragram_fix_tgl) : 1 Juli 2016
- *   JANGAN DIGANTI2 LAGI KONFIGURASINYA KECUALI DICATAT
- *   MENDING COPY KE CLASS LAIN SAJA KALAU ADA PERUBAHAN
- *
- *   menggunakan glove/word2vec untuk kemiripan dua sentnece,
- *
- *   - lihat di bagian init untuk setvectornya
- *   - untuk set penalti lihat class simGroupToken
- *     adaptasi dari paper UMBC (han2013)
+ *   lihat class isiWordEmbedUmbc <- kelas ini jgn diganti karena sdh yg terbaik
+ *   tambahan kelas ini:
+ *   - prepro menggunakan PPDB, agar sinonim frase bisa diproses
  *
  */
 
-public class IsiWordEmbedUmbc {
+public class IsiWordEmbedUmbcPreproPPDB {
     public String namaTabel;
     private Connection conn = null;
     private PreparedStatement pUpd = null;
@@ -100,6 +94,11 @@ public class IsiWordEmbedUmbc {
 
 
     public void proses() {
+
+        ProsesPPDBHypothesis p = new ProsesPPDBHypothesis();
+        p.init();
+
+
         rs = null;
         try {
             rs = pSel.executeQuery();
@@ -108,6 +107,10 @@ public class IsiWordEmbedUmbc {
                 int id = rs.getInt(1);
                 String t = rs.getString(2);
                 String h = rs.getString(3);
+
+                //t direplace sinonimnya
+                t = p.gantiSinonimPPDB(t,h);  // <---------------------
+
                 String tSynTree = rs.getString(4);
                 String hSynTree = rs.getString(5);
                 String tNer = rs.getString(6);
@@ -145,6 +148,7 @@ public class IsiWordEmbedUmbc {
                 pUpd.setLong(2, id);
                 pUpd.executeUpdate();
 
+                p.close();
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -162,7 +166,7 @@ public class IsiWordEmbedUmbc {
         //42B tokens, 1.9M vocab, uncased, 300d vectors, hasil kurang
         //String str42 = "D:\\eksperimen\\glove\\glove.42B.300d\\glove.42B.300d.txt";
 
-        IsiWordEmbedUmbc iw = new IsiWordEmbedUmbc();
+        IsiWordEmbedUmbcPreproPPDB iw = new IsiWordEmbedUmbcPreproPPDB();
         //iw.init("D:\\eksperimen\\glove\\glove.6B.300d.txt","rte3_babak2");
         //iw.init(str840,"rte3_babak2","skor_glove_perkalian_840"); //gagal
         //iw.init("rte3_test_gold","umbc_glove2");
@@ -175,7 +179,7 @@ public class IsiWordEmbedUmbc {
 
         //iw.init("rte3_test_gold","umbc_paragram");
         //iw.init("rte3_babak2","umbc_paragram");
-        iw.init("rte3_babak2","umbc_juli");
+        iw.init("rte3_test_gold","umbc_juli"); //umbc_paragram_fixtgl_preproPPDB
 
         //iw.init("rte3_babak2","umbc_glove_w2c"); //gabungan antara w2c dan glove (rata2? max? min?)
         //iw.init("rte3_test_gold","umbc_w2v_fix1"); //hanya w2v, tapi berdasarkan fix1

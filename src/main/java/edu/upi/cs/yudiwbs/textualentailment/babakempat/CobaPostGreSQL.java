@@ -9,9 +9,11 @@ import java.sql.*;
  * GRANT ALL PRIVILEGES ON DATABASE PPDB TO "user";
  * GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "user";
  *
+ * GRANT USAGE, SELECT ON SEQUENCE ppdblarge_id_seq TO "user"; <-- insert
+ *
  */
 
-public class CobaPostGre {
+public class CobaPostGreSQL {
 
     public static void main(String[] args) {
 

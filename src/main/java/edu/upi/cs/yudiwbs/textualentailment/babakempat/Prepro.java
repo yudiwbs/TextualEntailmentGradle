@@ -129,16 +129,6 @@ public class Prepro {
     }
 
 
-
-
-
-
-
-    //kalau dapat error
-    //Unrecoverable error while loading a tagger model
-    // Unable to resolve "edu/stanford/nlp/models/pos-tagger/english-left3words/
-    // english-left3words-distsim.tagger"
-
     public void initLemma() {
         Properties props = new Properties();
         props.put("annotators", "tokenize, ssplit, pos, lemma");
@@ -274,13 +264,38 @@ public class Prepro {
         return out;
     }
 
+    //saya mau makan. => saya mau makan
+    public String buangTitikDiAkhir(String str) {
+        if (str != null && str.length() > 0 && str.charAt(str.length()-1)=='.') {
+                str = str.substring(0, str.length()-1);
+        }
+        return str.trim();
+    }
+
+    /*
+       hanya load ke arraylist biasa aja tanpa lewat stopwords
+     */
+    public ArrayList<String> loadKata(String str,boolean keLowerCase) {
+        ArrayList<String> out = new  ArrayList<>();
+
+        Scanner sc = new Scanner(str);
+        while (sc.hasNext()) {
+            String kata = sc.next().trim();
+            if (keLowerCase) {
+                kata = kata.toLowerCase();
+            }
+            out.add(kata);
+        }
+        return out;
+    }
+
 
 
     //loadstopwords harus dipanggil terlebih dulu!!
     //hanya huruf yang diterima
     public ArrayList<String> loadKataTanpaStopWords(String str,boolean keLowerCase,boolean buangSelainHuruf) {
         assert (alStopWords.size()>0); //pastikan stopwords sudah diload
-        ArrayList<String> out = new  ArrayList<String>();
+        ArrayList<String> out = new  ArrayList<>();
         String str2;
         if (buangSelainHuruf) {
             //buang selaing alphanumerik
@@ -664,10 +679,11 @@ public class Prepro {
 
        public static void main(String[] args) {
            Prepro pp = new Prepro();
-           pp.loadStopWords("stopwords2","kata");
+           System.out.println(pp.buangTitikDiAkhir("Saya mau makan nasi."));
+           //pp.loadStopWords("stopwords2","kata");
            //String out = pp.loadKataTanpaStopWordstoString("halo Bandung yudi's home air&air 123 and underscore_boleh",true,true);
-           String out = pp.loadKataTanpaStopWordstoString("George Herbert Walker Bush (born June 12, 1924) is the former 41st President of the United States of America. Almost immediately upon his return from the war in December 1944, George Bush married Barbara Pierce.",true,true);
-           System.out.println(out);
+           //String out = pp.loadKataTanpaStopWordstoString("George Herbert Walker Bush (born June 12, 1924) is the former 41st President of the United States of America. Almost immediately upon his return from the war in December 1944, George Bush married Barbara Pierce.",true,true);
+           //System.out.println(out);
 
            //pp.loadStopWords("stopwords","kata");
            //ArrayList<String> out ;
