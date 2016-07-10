@@ -47,7 +47,10 @@ public class ProsesPPDBHypothesis {
 
         //bentuk window  yg terisi 2 kata, 3 kata dan 4 kata
         //satu kata tidak perlu diproses karena sudah dihandle di umbc
-        for (int jumKata=2; jumKata<=4; jumKata++) {
+
+        //for (int jumKata=2; jumKata<=4; jumKata++) {
+        //cobain dengan satu kata
+        for (int jumKata=1; jumKata<=4; jumKata++) {
             for (int j=0; j<=alKata.size();j++) {
                 StringBuilder sb = new StringBuilder();
                 int k = j;
@@ -66,10 +69,12 @@ public class ProsesPPDBHypothesis {
         }
 
         //frasa sudah berisi (dan unik)
-        //perlu buang frasa yang ada di frasa lain
         //urutkan dari kecil ke besar
 
         alFrasa.sort((s1, s2) -> Integer.compare(s1.length(),s2.length()));
+
+        //debug
+        //alFrasa.forEach(System.out::println);
 
         //cek apakah overlap
         /*
@@ -182,124 +187,7 @@ public class ProsesPPDBHypothesis {
             e.printStackTrace();
         }
     }
-    /*
-        jangan digunakan!
-     */
-    public void old_prosesAmbilSinonimDariDB() {
-        //baca file id,t,h
-        String fileTH  =  "D:\\desertasi\\eksperimen\\id_t_h.txt";
-        Prepro pp = new Prepro();
-        pp.loadStopWords("stopwords2","kata");
 
-        //looad id, t,h
-        try {
-            Scanner sc = new Scanner(new File(fileTH));
-            int cc = 0;
-            int maxJumKata=3;
-            int jumCocokT=0;
-            boolean awalHeader = true;
-            while (sc.hasNextLine()) {
-                awalHeader = true;
-                String id = sc.nextLine();  //tidak dipake
-                String t  = sc.nextLine();
-                String h  = sc.nextLine();
-
-                //proses h
-                //buang titik di akhir kalimat
-                h = pp.buangTitikDiAkhir(h);
-
-
-                ArrayList<String>  alFrasa =  new ArrayList<>();
-                ArrayList<String>  alKata  =  pp.loadKata(h,true);
-
-                //proses window 1 kata, 2 kata, 3 kata dan 4 kata
-                //satu kata tidak perlu diproses karena sudah dihandle di umbc
-                for (int jumKata=2; jumKata<=4; jumKata++) {
-                    for (int j=0; j<=alKata.size();j++) {
-                        StringBuilder sb = new StringBuilder();
-                        int k = j;
-                        int kataAmbil = 0;
-                        while (k<alKata.size() && kataAmbil <jumKata ) {
-                            sb.append(alKata.get(k));
-                            sb.append(" ");
-                            k++;
-                            kataAmbil++;
-                        }
-                        String frasa = sb.toString().trim();
-                        if (!frasa.equals("")&&!alFrasa.contains(frasa)&&frasa.contains(" ")) {
-                            alFrasa.add(frasa);  //hilangkan duplikasi
-                        }
-                    }
-                }
-
-                //frasa sudah masuk ke list (unik)
-
-                for (String fr: alFrasa) {
-                    //cari di database ppdb
-                    pSel.setString(1,fr);
-                    ResultSet rs = pSel.executeQuery();
-                    ArrayList<String> alSinonim = new ArrayList<>();
-                    while (rs.next()) {
-                        int idTbl   = rs.getInt(1);
-                        String key2 = rs.getString(2);
-                        String value = rs.getString(3);
-                        if (!alSinonim.contains(key2)) {
-                            alSinonim.add(key2);
-                        }
-                    }
-                    rs.close();
-
-                    if (alSinonim.size()>0) {
-                        ArrayList<String> alStrKetemu = new ArrayList<>();
-
-                        for (String s:alSinonim) {
-                            //cari sinonim ini di T
-                            boolean ketemu = t.matches(".*?\\b"+s+"\\b.*?");
-                            if (ketemu) {
-                                alStrKetemu.add(s);
-                                jumCocokT++;
-                            }
-                        }
-                        //ada yang cocok
-                        if (alStrKetemu.size()>0) {
-                            if (awalHeader) { //hanya print yg punya sinonim
-                                System.out.println("---");
-                                System.out.println(id);
-                                System.out.println("H:" + h);
-                                System.out.println("T:" + t);
-                                System.out.println("---");
-                                awalHeader = false;
-                            }
-
-                            //ArrayList<String>  alFr = pp.loadKataTanpaStopWords(fr,true,false);;
-                            ArrayList<String> alSinonimValid= new ArrayList<>();
-                            for (String sk:alStrKetemu) {
-                                ArrayList<String>  alSk = pp.loadKataTanpaStopWords(sk,true,false);
-                                //hanya yg >1 kata tanpa stopwords
-                                if (alSk.size()>1) {
-                                    alSinonimValid.add(sk);
-                                }
-                            }
-                            if (alSinonimValid.size()>0) {
-                                System.out.println("+++");
-                                System.out.println(fr);
-                                for (String s:alSinonimValid) {
-                                    System.out.println(s);
-                                }
-                            }
-                        }
-                    }
-                }
-                cc++;
-                //break;//coba satu dulu
-            }
-            System.out.println("Jum cocok:"+jumCocokT);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
 
     public void close() {
         try {
@@ -343,9 +231,12 @@ public class ProsesPPDBHypothesis {
     }
 
     public static void main(String[] args) {
+
         ProsesPPDBHypothesis p  = new ProsesPPDBHypothesis();
         p.proses();
         p.close();
+
+
 
 
         /*
@@ -363,6 +254,5 @@ public class ProsesPPDBHypothesis {
         System.out.println("output:"+t2);
         p.close();
         */
-
     }
 }
