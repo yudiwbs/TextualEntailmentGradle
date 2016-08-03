@@ -24,7 +24,8 @@ import java.util.regex.Pattern;
 public class SimGroupToken {
     //WordVectors vec;
     WordVectors vecGlove  = null;
-    //WordVectors vecW2V  = null;
+    WordVectors vecW2V  = null;
+    int isGloveOrW2vec;
 
     GroupToken gtTT=null;
     GroupToken gtHH=null;
@@ -58,6 +59,8 @@ public class SimGroupToken {
     final static  double  batasPenaltiKata = 0.25;
     final static  double  penaltiSubjTdkCocok = 1;   //coba dgn 2 dan 3 hasilnya buruk
     final static  double  penaltiKalNeg = 1;  //
+
+
 
     //inisialisasinya bisa digabung nanti
     public void setTH(String t, String h) {
@@ -153,8 +156,12 @@ public class SimGroupToken {
 
 
     //jangan create berulang2!
-    //berat
-    public SimGroupToken(String fileVecGlove,String fileVecW2V) {
+    //kacau nih glove dan w2vec-nya digabung, perlu dipisah
+
+    //public SimGroupToken(String fileVecGlove,String fileVecW2V) {
+    public SimGroupToken(int vIsGloveOrW2vec,String fileVec) {
+        isGloveOrW2vec = vIsGloveOrW2vec;
+        //isGloveOrW2vec, 0: glove, 1: w2vec
 
         //kenapa nggak menggunakan stopwords? mungkin karena untuk ambil subjek?
         pp  = new Prepro();
@@ -172,30 +179,31 @@ public class SimGroupToken {
         //opt.setGuess(true); //untuk apa??
 
         //load vector GLOVE
+        if (isGloveOrW2vec==0) {
+            try {
+                System.out.println("Mulai Load model Glovec. Mungkin agak lama ...");
+                //vecW2V = WordVectorSerializer.loadGoogleModel(new File(fileVecW2V), true);
+                vecGlove = WordVectorSerializer.loadTxtVectors(new File(fileVec));
 
-        try {
-            System.out.println("Mulai Load model agak lama ...");
-            //vecW2V = WordVectorSerializer.loadGoogleModel(new File(fileVecW2V), true);
-            vecGlove = WordVectorSerializer.loadTxtVectors(new File(fileVecGlove));
-
-            System.out.println("Load selesai... ");
-        } catch (Exception ex) {
-            ex.printStackTrace();
+                System.out.println("Load selesai... ");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
 
-
-
-        //load
-        //load vector W2V
-        /*
-        try {
-            System.out.println("Mulai Load w2vec, agak lama ...");
-            vecW2V = WordVectorSerializer.loadGoogleModel(new File(fileVecW2V), true);
-            System.out.println("Load selesai... ");
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        else
+        if (isGloveOrW2vec==1) {
+            //load
+            //load vector W2V
+            try {
+                System.out.println("Mulai Load model w2vec, agak lama ...");
+                vecW2V = WordVectorSerializer.loadGoogleModel(new File(fileVec), true);
+                System.out.println("Load selesai... ");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
-        */
+
     }
 
     //periksa dari gH -> gT
@@ -415,7 +423,15 @@ public class SimGroupToken {
                         //System.out.println("Hlem:"+vHlem);
                         //System.out.println("Tlem:"+vTlem);
 
-                        double skorEmGlove = vecGlove.similarity(vH.toLowerCase().trim(),vT.toLowerCase().trim());
+                        double skorEm;
+                        if (isGloveOrW2vec==0) {
+                            double skorEmGlove = vecGlove.similarity(vH.toLowerCase().trim(), vT.toLowerCase().trim());
+                            skorEm = skorEmGlove; //glove saja
+                        }
+                        else {
+                            double skorW2V = vecW2V.similarity(vH,vT); //tidak dilowercase
+                            skorEm = skorW2V; //w2vec saja
+                        }
                         //System.out.println("Skor glove: "+vH+":"+vT+"="+skorEmGlove);
 
                         //double skorW2V = vecW2V.similarity(vH,vT); //tidak dilowercase
@@ -423,7 +439,7 @@ public class SimGroupToken {
                         //double skorEm = Math.max(skorEmGlove,skorW2V); //cari max
                         //double skorEm = Math.min(skorEmGlove,skorW2V); //cari min
                         //double skorEm = skorW2V; //w2vec saja
-                        double skorEm = skorEmGlove; //glove saja
+                        //double skorEm = skorEmGlove; //glove saja
                         if (skorEm > maxSkor) {
                             maxSkor = skorEm;
                             strTercocok = vT;

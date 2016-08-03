@@ -22,8 +22,10 @@ public class CobaWS4J {
         RelatednessCalculator rc;
         ILexicalDatabase db = new NictWordNet();
         rc = new WuPalmer(db);
-        String k1="missing";
-        String k2="search";
+        //String k1="missing";
+        //String k2="search";
+        String k1="home";
+        String k2="house";
         double out = rc.calcRelatednessOfWords(k1, k2);
         System.out.println(k1+"->"+k2+"="+out);
     }

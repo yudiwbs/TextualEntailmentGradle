@@ -5,7 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 /**
- * Created by yudiwbs on 03/04/2016.
+ * Created by yudiwbs on 03/04/2016.IsiWordEmbedUmbc
  *
  *   INI SUDAH YG TERBAIK (umbc_paragram_fix_tgl) : 1 Juli 2016
  *   JANGAN DIGANTI2 LAGI KONFIGURASINYA KECUALI DICATAT
@@ -40,7 +40,7 @@ public class IsiWordEmbedUmbc {
             //jika sudah ada isi lagi (dikomentari yg bagian is null)
             String strSel = "select id,t,h, t_gram_structure, " +
                     "h_gram_structure,t_ner, h_ner, isEntail " +
-                    " from " + namaTabel + " #limit 10" ; //ditabatasi dulu sepuluh
+                    " from " + namaTabel + " #limit 10" ;
 
 
             String strUpdate = "update "+namaTabel+ " set "+kolomTujuan+"=? " +
@@ -54,10 +54,9 @@ public class IsiWordEmbedUmbc {
 
         //paling akhir, karena lama
 
-        //
+        //ini yang penting
         //paragram sl999: lebih bagus pada hasil testing
-        sgt = new SimGroupToken("D:\\eksperimen\\paragram\\paragram_300_sl999\\paragram_300_sl999\\paragram_300_sl999.txt",
-                "D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz");
+        sgt = new SimGroupToken(0,"D:\\eksperimen\\paragram\\paragram_300_sl999\\paragram_300_sl999\\paragram_300_sl999.txt");
 
 
         //paragaram ws353
