@@ -6,6 +6,8 @@ import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,9 +21,13 @@ import java.util.regex.Pattern;
  *
  *   fix1: perbaikan proses tgl, angka, buang dash
  *   fix3: penalti untuk kesamaan lokasi
+ *
+ *   agt 16: tambah parameter
  */
 
 public class SimGroupToken {
+    public ParameterSimGroupToken parameter;
+
     //WordVectors vec;
     WordVectors vecGlove  = null;
     WordVectors vecW2V  = null;
@@ -49,6 +55,7 @@ public class SimGroupToken {
     kata lainnya.
      */
 
+    /*
     final static  double  penaltiAngka = 1;  //umbc: 1
     final static  double  penaltiLokasi = 0.5; //umbc: tdk ada
     final static  double  penaltiTgl = 0.5;  //umbc: 0.5
@@ -57,8 +64,11 @@ public class SimGroupToken {
     final static  double  penaltiKataVerbNoun = 1;  //umbc 1
     final static  double  penaltiKataLain = 0.5;    //umbc 0.5
     final static  double  batasPenaltiKata = 0.25;
-    final static  double  penaltiSubjTdkCocok = 1;   //coba dgn 2 dan 3 hasilnya buruk
-    final static  double  penaltiKalNeg = 1;  //
+    final static  double  penaltiKalNeg = 1;
+    */
+
+    //final static  double  penaltiSubjTdkCocok = 1;   //coba dgn 2 dan 3 hasilnya buruk
+
 
 
 
@@ -159,7 +169,8 @@ public class SimGroupToken {
     //kacau nih glove dan w2vec-nya digabung, perlu dipisah
 
     //public SimGroupToken(String fileVecGlove,String fileVecW2V) {
-    public SimGroupToken(int vIsGloveOrW2vec,String fileVec) {
+    public SimGroupToken(int vIsGloveOrW2vec,String fileVec, ParameterSimGroupToken param) {
+        parameter = param;
         isGloveOrW2vec = vIsGloveOrW2vec;
         //isGloveOrW2vec, 0: glove, 1: w2vec
 
@@ -188,6 +199,7 @@ public class SimGroupToken {
                 System.out.println("Load selesai... ");
             } catch (Exception ex) {
                 ex.printStackTrace();
+                System.exit(-1);
             }
         }
 
@@ -201,6 +213,7 @@ public class SimGroupToken {
                 System.out.println("Load selesai... ");
             } catch (Exception ex) {
                 ex.printStackTrace();
+                System.exit(-1);
             }
         }
 
@@ -268,7 +281,7 @@ public class SimGroupToken {
                     }
                 }
                 if (!ketemuCocok) { //kena penalti
-                    double penalti = penaltiUang;
+                    double penalti = parameter.penaltiUang;
                     totalPenalti = totalPenalti+penalti;
                     //totalPenaltiKali = totalPenaltiKali * penalti;
                     System.out.println("Tdk ada pasangan, kena penalti:"+sH+"("+penalti+")");
@@ -291,7 +304,7 @@ public class SimGroupToken {
                     }
                 }
                 if (!ketemuCocok) { //kena penalti
-                    double penalti = penaltiAngka; //angka penaltinya besar
+                    double penalti = parameter.penaltiAngka; //angka penaltinya besar
                     totalPenalti = totalPenalti+penalti;
                     //totalPenaltiKali = totalPenaltiKali * penalti;
                     System.out.println("Tdk ada pasangan, kena penalti:"+sH+"("+penalti+")");
@@ -361,7 +374,7 @@ public class SimGroupToken {
                 }   //for sT
 
                 if (!ketemuCocok) { //kena penalti
-                    double penalti = penaltiTgl;
+                    double penalti = parameter.penaltiTgl;
                     totalPenalti = totalPenalti+penalti;
                     //totalPenaltiKali = totalPenaltiKali * penalti;
                     System.out.println("Tdk ada pasangan, kena penalti:"+sH+"("+penalti+")");
@@ -452,19 +465,19 @@ public class SimGroupToken {
             System.out.println("("+maxSkor+")");
 
             //terlalu rendah, kena penalti
-            if (maxSkor<=batasPenaltiKata) {
+            if (maxSkor<=parameter.batasPenaltiKata) {
                 System.out.println("vH kena penalti.");
                 if ( itH.alNoun.contains(vH) ||
                         itH.alPronoun.contains(vH) ||
                         itH.alVerb.contains(vH)) {
                     System.out.println(" Verb/noun/pronoun, penalti lebih besar");
-                    double penalti = penaltiKataVerbNoun;
+                    double penalti = parameter.penaltiKataVerbNoun;
                     totalPenalti = totalPenalti+penalti;
                     //totalPenaltiKali = totalPenaltiKali*penalti;
 
                 } else {
                     System.out.println("Selain Verb/noun/pronoun, penalti lebih kecil");
-                    double penalti = penaltiKataLain;
+                    double penalti = parameter.penaltiKataLain;
                     totalPenalti = totalPenalti+penalti;
                     //totalPenaltiKali = totalPenaltiKali*penalti;
                 }
@@ -561,7 +574,7 @@ public class SimGroupToken {
             //harus dicek apakah verb di H ada di bagian verb not
             //tapi mungkin harusnya dicek verb yang langsung berurutan!
             if ((tNeg.isNegatif) && hmVerbHT.containsValue(tNeg.verb))  {
-                skorPenaltiNeg = penaltiKalNeg;
+                skorPenaltiNeg = parameter.penaltiKalNeg;
                 System.out.println("KENA PENALTI NEGATIF");
                 System.out.println("verb:"+ tNeg.verb);
             }
@@ -606,9 +619,66 @@ public class SimGroupToken {
         return out;
     }
 
+    public String getNearestNeighbor(String seed) {
+        Collection<String> nw;
+        if (isGloveOrW2vec==0) {
+            nw =  vecGlove.wordsNearest(seed,10); //sebanyak sepuluh
+        }
+        else {
+            nw =  vecW2V.wordsNearest(seed,10); //sebanyak sepuluh
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String s: nw) {
+            sb.append(s);
+            sb.append(" ");
+        }
+        return sb.toString();
+    }
+
     public static void main(String[] args) {
         //debug
+        //iw.init("rte3_babak2","juli_glove_42B",0,);  //<-- terbaik
+        ParameterSimGroupToken par = new ParameterSimGroupToken();
+        SimGroupToken sgt;
+        //sgt = new SimGroupToken(0,"D:\\eksperimen\\glove\\glove.42B.300d.txt",par);
+        //String strModel = "D:\\eksperimen\\glove\\glove.6B.300d.txt";
+        //String strModel = "D:\\eksperimen\\glove\\glove.42B.300d.txt";
+        //String strModel = "D:\\eksperimen\\glove\\glove.840B.300d.txt";
+        //String strModel ="D:\\eksperimen\\paragram\\paragram_300_sl999\\paragram_300_sl999\\paragram_300_sl999.txt";
+        //String strModel ="D:\\eksperimen\\paragram\\paragram_300_ws353\\paragram_300_ws353\\paragram_300_ws353.txt";
+        //glove: sgt = new SimGroupToken(0,strModel,par);
 
+        //word2vec
+        //String strModel ="D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz";
+        String strModel ="D:\\eksperimen\\baroni_vector\\EN-wform.w.5.cbow.neg10.400.subsmpl_v_spasi.txt";
+        sgt = new SimGroupToken(0,strModel,par);
+
+        ArrayList<String> alKata= new ArrayList<>();
+        alKata.add("dagbladet");
+        alKata.add("Dagbladet");
+        alKata.add("resided");
+        alKata.add("evacuated");
+        alKata.add("defeated");
+        alKata.add("drug");
+        alKata.add("member");
+        alKata.add("vegetation");
+        alKata.add("improves");
+        alKata.add("people");
+        alKata.add("terminals");
+        alKata.add("used");
+        alKata.add("provide");
+        alKata.add("asia");
+        alKata.add("democratic");
+        alKata.add("sets");
+        alKata.add("new");
+        alKata.add("opponent");
+
+        System.out.println(strModel);
+        for (String kata: alKata) {
+            String nn = sgt.getNearestNeighbor(kata);
+            System.out.println(kata+ ":" + nn);
+        }
+        System.out.println("-------------------");
         /*
         String t = "After his release, the clean-shaven Magdy el-Nashar told reporters outside his home that he had " +
                 "nothing to do with the July 7 transit attacks, which killed 52 people and the four bombers.";

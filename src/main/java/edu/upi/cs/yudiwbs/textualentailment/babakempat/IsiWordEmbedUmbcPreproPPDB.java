@@ -52,8 +52,8 @@ public class IsiWordEmbedUmbcPreproPPDB {
         //paragram sl999: lebih bagus pada hasil testing
         //sgt = new SimGroupToken("D:\\eksperimen\\paragram\\paragram_300_sl999\\paragram_300_sl999\\paragram_300_sl999.txt",
         //        "D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz");
-
-        sgt = new SimGroupToken(0,"D:\\eksperimen\\paragram\\paragram_300_sl999\\paragram_300_sl999\\paragram_300_sl999.txt");
+        ParameterSimGroupToken param = new ParameterSimGroupToken();
+        sgt = new SimGroupToken(0,"D:\\eksperimen\\paragram\\paragram_300_sl999\\paragram_300_sl999\\paragram_300_sl999.txt",param);
 
         //paragaram ws353
         /*
