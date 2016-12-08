@@ -19,6 +19,9 @@ public class ParameterSimGroupToken {
 
     @Override
     public String toString() {
-        return "";
+        return "penaltiAngka:"+penaltiAngka+" penaltiLokasi:"
+                +penaltiLokasi+" penaltiTgl:"+penaltiTgl+" penaltiUang:"+penaltiUang
+                +" penaltiKataVerbNoun:"+penaltiKataVerbNoun+" penaltiKataLain:"+penaltiKataLain
+                +" penaltiKalNeg:"+penaltiKalNeg+ " batasPenaltiKata:"+batasPenaltiKata;
     }
 }

@@ -68,9 +68,9 @@ public class OLD_CekKalimatNegatif {
 
     Prepro pp;
 
-    public OLD_CekKalimatNegatif() {
-        pp = new Prepro();
-        pp.loadStopWords("stopwords2","kata");
+    public OLD_CekKalimatNegatif(Prepro pp) {
+        this.pp = pp;
+        //pp.loadStopWords("stopwords2","kata");
     }
 
     public StructCariKalNegatif isKalimatNegatif(InfoTeks it) {
@@ -144,7 +144,7 @@ public class OLD_CekKalimatNegatif {
             pSel = conn.prepareStatement(strSel);
 
             rs = pSel.executeQuery();
-            OLD_CekKalimatNegatif ck = new OLD_CekKalimatNegatif();
+            OLD_CekKalimatNegatif ck = new OLD_CekKalimatNegatif(pp);
             while (rs.next()) {
                 //id,t,h, t_gram_structure, h_gram_structure
                 int id = rs.getInt(1);

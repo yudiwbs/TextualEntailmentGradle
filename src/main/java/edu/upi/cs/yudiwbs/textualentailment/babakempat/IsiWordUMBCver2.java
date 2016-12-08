@@ -7,7 +7,8 @@ import java.sql.ResultSet;
 /**
  * Created by yudiwbs on 03/04/2016.IsiWordEmbedUmbc
  *
- *   lihat class isiWordEmbedUmbc <- kelas ini jgn diganti karena sdh yg terbaik
+ *   lihat class isiWordEmbedUmbc <- kelas isiWordEmbedUmbc ini jgn diganti karena sdh yg terbaik
+
  *   tambahan kelas ini:
  *   - fokus untuk melihat kesalahan tiap word embeded
  *   - langkah2nya, hasilkan skor umbc di tabel (lihat method init)
@@ -81,9 +82,9 @@ public class IsiWordUmbcVer2 {
                         ""+isEntail);
 
                 //isi group token
-                GroupToken gtT = new GroupToken();
+                GroupToken gtT = new GroupToken(pp);
                 gtT.ambilToken(t,tNer);
-                GroupToken gtH = new GroupToken();
+                GroupToken gtH = new GroupToken(pp);
                 gtH.ambilToken(h,hNer);
 
                 //nanti bisa gabung pengisian variabelnya
@@ -154,10 +155,10 @@ public class IsiWordUmbcVer2 {
         //paragram sl999: lebih bagus pada hasil testing
 
         //word2vec
-        //sgt = new SimGroupToken(1,"D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz");
-
-
-        sgt = new SimGroupToken(gloveOrW2vec,fileVector);
+        ParameterSimGroupToken par = new ParameterSimGroupToken();
+        Prepro pp = new Prepro();
+        pp.loadStopWords("stopwords2","kata");
+        sgt = new SimGroupToken(1,"D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz",par,pp);
 
         //glovec
         //sgt = new SimGroupToken(0,"D:\\eksperimen\\paragram\\paragram_300_sl999\\paragram_300_sl999\\paragram_300_sl999.txt");
@@ -218,9 +219,9 @@ public class IsiWordUmbcVer2 {
                         ""+isEntail);
 
                 //isi group token
-                GroupToken gtT = new GroupToken();
+                GroupToken gtT = new GroupToken(pp);
                 gtT.ambilToken(t,tNer);
-                GroupToken gtH = new GroupToken();
+                GroupToken gtH = new GroupToken(pp);
                 gtH.ambilToken(h,hNer);
 
                 //nanti bisa gabung pengisian variabelnya
@@ -266,7 +267,7 @@ public class IsiWordUmbcVer2 {
         //iw.init("rte3_babak2","umbc_paragram");
         //iw.init("rte3_babak2","juli_sl999");
         //iw.init("rte3_babak2","juli_glove_ws353");  //lihat ke dalam mehtod init untuk ganti model
-        //iw.init("rte3_babak2","juli_glove_6B");
+        //iw.init("rte3_babak2",0,"juli_glove_6B");
 
         //iw.init("rte3_babak2","juli_w2vec_neg300",1,"D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz");
 
@@ -276,9 +277,17 @@ public class IsiWordUmbcVer2 {
         //iw.init("rte3_babak2","",0,"D:\\eksperimen\\paragram\\paragram_300_sl999\\paragram_300_sl999\\paragram_300_sl999.txt");
         //iw.init("rte3_babak2","",0,"D:\\eksperimen\\glove\\glove.6B.300d.txt");
         //iw.init("rte3_babak2","juli_glove_42B",0,"D:\\eksperimen\\glove\\glove.42B.300d.txt");  //<-- terbaik
-        iw.init("rte3_babak2","juli_glove_840B",0,"D:\\eksperimen\\glove\\glove.840B.300d.txt");
-        //iw.proses();  //kalau klasifikasi, proses dimatikan
+        //iw.init("rte3_babak2","juli_glove_840B",0,"D:\\eksperimen\\glove\\glove.840B.300d.txt");
+        //iw.init("rte3_babak2","juli_w2vec_baroni",0,"D:\\eksperimen\\baroni_vector\\EN-wform.w.5.cbow.neg10.400.subsmpl_v_spasi.txt");
 
+        //iw.proses();  //kalau klasifikasi, proses dimatikan
+        /*setelah proses, ambil data pasangan entail dan skor,
+            gunakan query:
+            select IF(isEntail = 1, "true", "false") as is_Entail, juli_sl999 from rte3_babak2
+
+               pindahkan ke google spreadsheet,
+               jadikan csv, buka
+        */
         /*
         glove:
         juli_sl999 <= 0.542626: FALSE (276.0/61.0)
@@ -296,16 +305,19 @@ public class IsiWordUmbcVer2 {
         juli_w2vec_neg300 <= 0.637661: FALSE (311.0/80.0)
         juli_w2vec_neg300 > 0.637661: TRUE (489.0/156.0)
 
-         <= 0.83624: FALSE (367.0/100.0)
+        glove_42B  <= 0.83624: FALSE (367.0/100.0)
         glove_42B > 0.83624: TRUE (433.0/120.0)
+
+        0.55922 juli_w2vec_baroni
 
         */
         //iw.klasifikasi(0.542626,"rte3_test_gold");  //glove pargram_sl999
         //iw.klasifikasi(0.774786,"rte3_test_gold"); //glove paragram_ws353
         //iw.klasifikasi(0.836064,"rte3_test_gold");   //glove 6b
         //iw.klasifikasi(0.83624,"rte3_test_gold");  //glove_42B   <-- terbaik!
-        iw.klasifikasi(0.776634,"rte3_test_gold"); //glove_840B  <-- berat!
+        //iw.klasifikasi(0.776634,"rte3_test_gold"); //glove_840B  <-- berat!
         //iw.klasifikasi(0.637661,"rte3_test_gold"); //w2vec neg
+        iw.klasifikasi(0.55922,"rte3_test_gold");    //juli_w2vec_baroni
         iw.close();
 
         //iw.init("rte3_babak2","umbc_glove_w2c"); //gabungan antara w2c dan glove (rata2? max? min?)

@@ -324,7 +324,7 @@ public class Prepro {
     public void loadStopWords(String namaTabel,String namaField) {
         //memindahkan data stopwords dari tabel ke memori alStopWords
         //FS: alStopWords terisi
-        System.out.println("loadStopWords");
+        //System.out.println("loadStopWords");
         Connection conn=null;
         PreparedStatement pSel=null;
         KoneksiDB db = new KoneksiDB();

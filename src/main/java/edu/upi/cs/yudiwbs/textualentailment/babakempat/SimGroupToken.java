@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 /**
  * Created by yudiwbs on 09/04/2016.
- * menghitung jarak/similarity antar dua grup token
+ *  menghitung jarak/similarity antar dua grup token
  *
  *
  * Dipanggil oleh IsiWordEmbedUmbc
@@ -26,7 +26,9 @@ import java.util.regex.Pattern;
  */
 
 public class SimGroupToken {
-    public ParameterSimGroupToken parameter;
+    private ParameterSimGroupToken parameter;
+
+
 
     //WordVectors vec;
     WordVectors vecGlove  = null;
@@ -36,6 +38,7 @@ public class SimGroupToken {
     GroupToken gtTT=null;
     GroupToken gtHH=null;
 
+    //HATI2
     //nggak bisa pake remove stopwords karena perlu memproses dengan teks original
     Prepro pp;
 
@@ -55,20 +58,12 @@ public class SimGroupToken {
     kata lainnya.
      */
 
-    /*
-    final static  double  penaltiAngka = 1;  //umbc: 1
-    final static  double  penaltiLokasi = 0.5; //umbc: tdk ada
-    final static  double  penaltiTgl = 0.5;  //umbc: 0.5
-    final static  double  penaltiUang = 0.5; //umbc: 0.5
-
-    final static  double  penaltiKataVerbNoun = 1;  //umbc 1
-    final static  double  penaltiKataLain = 0.5;    //umbc 0.5
-    final static  double  batasPenaltiKata = 0.25;
-    final static  double  penaltiKalNeg = 1;
-    */
 
     //final static  double  penaltiSubjTdkCocok = 1;   //coba dgn 2 dan 3 hasilnya buruk
 
+    public void setParam(ParameterSimGroupToken par) {
+        this.parameter = par;
+    }
 
 
 
@@ -150,10 +145,10 @@ public class SimGroupToken {
         String subjH = getSubj(itH,predH).toLowerCase();
         String subjT = getSubj(itT,predT).toLowerCase();
 
-
+        /*
         System.out.println("Subyek H ("+predH+")="+subjH);
         System.out.println("Subyek T ("+predT+")="+subjT);
-
+        */
         //true jika salah satu contain
 
         if (subjH.equals("")||subjT.equals("")) {
@@ -169,17 +164,18 @@ public class SimGroupToken {
     //kacau nih glove dan w2vec-nya digabung, perlu dipisah
 
     //public SimGroupToken(String fileVecGlove,String fileVecW2V) {
-    public SimGroupToken(int vIsGloveOrW2vec,String fileVec, ParameterSimGroupToken param) {
-        parameter = param;
+    //parameter dipisah
+    //public SimGroupToken(int vIsGloveOrW2vec,String fileVec, ParameterSimGroupToken param) {
+    public SimGroupToken(int vIsGloveOrW2vec,String fileVec, ParameterSimGroupToken par, Prepro ppStopWords) {
+
+        this.ppStopWords = ppStopWords;  //biar hanya sekali stopwordsnya diload
+
+        this.pp = new Prepro();
+
+        //parameter = param;
+        setParam(par);
         isGloveOrW2vec = vIsGloveOrW2vec;
         //isGloveOrW2vec, 0: glove, 1: w2vec
-
-        //kenapa nggak menggunakan stopwords? mungkin karena untuk ambil subjek?
-        pp  = new Prepro();
-
-        ppStopWords = new Prepro();
-        ppStopWords.loadStopWords("stopwords2","kata");
-
 
         //pLemma   = new ProsesLemma(); //panggil sekali, karena ada proses load
         pWordnet = new ProsesWordnet();
@@ -269,14 +265,14 @@ public class SimGroupToken {
         //uang
         if (gtH.tokenUang.size()>0) {
             for (String sH: gtH.tokenUang) {
-                System.out.println("Cari uang:"+sH);
+                //System.out.println("Cari uang:"+sH);
                 boolean ketemuCocok = false;
                 for (String sT: gtT.tokenUang) {
                     if (sH.equals(sT)) {
                         ketemuCocok = true;
                         totalSkor++;
                         //totalSkorKali = totalSkorKali * 1; //cuma supaya jelas saja, bisa dibuang baris ini
-                        System.out.println(sH+"->"+sT);
+                        //System.out.println(sH+"->"+sT);
                         break; //proses sH berikutnya
                     }
                 }
@@ -284,7 +280,7 @@ public class SimGroupToken {
                     double penalti = parameter.penaltiUang;
                     totalPenalti = totalPenalti+penalti;
                     //totalPenaltiKali = totalPenaltiKali * penalti;
-                    System.out.println("Tdk ada pasangan, kena penalti:"+sH+"("+penalti+")");
+                    //System.out.println("Tdk ada pasangan, kena penalti:"+sH+"("+penalti+")");
                 }
             }
         }
@@ -292,14 +288,14 @@ public class SimGroupToken {
         //angka
         if (gtH.tokenAngka.size()>0) {
             for (String sH: gtH.tokenAngka) {
-                System.out.println("Cari angka:"+sH);
+                //System.out.println("Cari angka:"+sH);
                 boolean ketemuCocok = false;
                 for (String sT: gtT.tokenAngka) {
                     if (sH.equals(sT)) {
                         ketemuCocok = true;
                         totalSkor++;;
                         //totalSkorKali = totalSkorKali * 1; //cuma supaya jelas saja, bisa dibuang baris ini
-                        System.out.println(sH+"->"+sT);
+                        //System.out.println(sH+"->"+sT);
                         break; //proses sH berikutnya
                     }
                 }
@@ -307,7 +303,7 @@ public class SimGroupToken {
                     double penalti = parameter.penaltiAngka; //angka penaltinya besar
                     totalPenalti = totalPenalti+penalti;
                     //totalPenaltiKali = totalPenaltiKali * penalti;
-                    System.out.println("Tdk ada pasangan, kena penalti:"+sH+"("+penalti+")");
+                    //System.out.println("Tdk ada pasangan, kena penalti:"+sH+"("+penalti+")");
                 }
             }
         }
@@ -328,14 +324,14 @@ public class SimGroupToken {
         if (gtH.tokenTgl.size()>0) {
             for (String sH: gtH.tokenTgl) {
                 boolean ketemuCocok = false;
-                System.out.println("Cari tgl:"+sH);
+                //System.out.println("Cari tgl:"+sH);
 
                 //cocokan  tahun
                 Matcher mH = pTahun.matcher(sH);
                 ArrayList<String> alTahunH = new ArrayList<>();
                 while (mH.find()) {
                     alTahunH.add(mH.group());
-                    System.out.println("tahunH:"+mH.group());
+                    //System.out.println("tahunH:"+mH.group());
                 }
                 String strTCocok="";
                 for (String sT : gtT.tokenTgl) {
@@ -344,7 +340,7 @@ public class SimGroupToken {
                     ArrayList<String> alTahunT = new ArrayList<>();
                     while (mT.find()) {
                         alTahunT.add(mT.group());
-                        System.out.println("tahunT:"+mT.group());
+                       // System.out.println("tahunT:"+mT.group());
                     }
 
                     if (alTahunH.size()>0) {
@@ -377,9 +373,9 @@ public class SimGroupToken {
                     double penalti = parameter.penaltiTgl;
                     totalPenalti = totalPenalti+penalti;
                     //totalPenaltiKali = totalPenaltiKali * penalti;
-                    System.out.println("Tdk ada pasangan, kena penalti:"+sH+"("+penalti+")");
+                    //System.out.println("Tdk ada pasangan, kena penalti:"+sH+"("+penalti+")");
                 } else  {
-                    System.out.println("Cocok: " + sH + "->" + strTCocok);
+                   // System.out.println("Cocok: " + sH + "->" + strTCocok);
                 }
             }
         }
@@ -460,23 +456,23 @@ public class SimGroupToken {
 
                     }
             } //loop for vT
-            System.out.print(vH +"-> "+strTercocok+" ");
+            //System.out.print(vH +"-> "+strTercocok+" ");
             hmVerbHT.put(vH,strTercocok);
-            System.out.println("("+maxSkor+")");
+           // System.out.println("("+maxSkor+")");
 
             //terlalu rendah, kena penalti
             if (maxSkor<=parameter.batasPenaltiKata) {
-                System.out.println("vH kena penalti.");
+               // System.out.println("vH kena penalti.");
                 if ( itH.alNoun.contains(vH) ||
                         itH.alPronoun.contains(vH) ||
                         itH.alVerb.contains(vH)) {
-                    System.out.println(" Verb/noun/pronoun, penalti lebih besar");
+                    //System.out.println(" Verb/noun/pronoun, penalti lebih besar");
                     double penalti = parameter.penaltiKataVerbNoun;
                     totalPenalti = totalPenalti+penalti;
                     //totalPenaltiKali = totalPenaltiKali*penalti;
 
                 } else {
-                    System.out.println("Selain Verb/noun/pronoun, penalti lebih kecil");
+                    //System.out.println("Selain Verb/noun/pronoun, penalti lebih kecil");
                     double penalti = parameter.penaltiKataLain;
                     totalPenalti = totalPenalti+penalti;
                     //totalPenaltiKali = totalPenaltiKali*penalti;
@@ -559,7 +555,7 @@ public class SimGroupToken {
         //atau kalimat tidak langsung
 
 
-        OLD_CekKalimatNegatif ck = new OLD_CekKalimatNegatif();
+        OLD_CekKalimatNegatif ck = new OLD_CekKalimatNegatif(ppStopWords);
         StructCariKalNegatif tNeg = ck.isKalimatNegatif(itT);
         StructCariKalNegatif hNeg = ck.isKalimatNegatif(itH);
 
@@ -575,8 +571,8 @@ public class SimGroupToken {
             //tapi mungkin harusnya dicek verb yang langsung berurutan!
             if ((tNeg.isNegatif) && hmVerbHT.containsValue(tNeg.verb))  {
                 skorPenaltiNeg = parameter.penaltiKalNeg;
-                System.out.println("KENA PENALTI NEGATIF");
-                System.out.println("verb:"+ tNeg.verb);
+                //System.out.println("KENA PENALTI NEGATIF");
+                //System.out.println("verb:"+ tNeg.verb);
             }
 
             //kalau sebaliknya susah, karena jumlah verb di H lebih banyak
@@ -600,10 +596,10 @@ public class SimGroupToken {
         //penalti di jumlah, totalskor dikali
         //out = (totalSkorKali / (jumToken)) - (totalPenalti/ (jumToken));
 
-        System.out.println("Total skor:"+totalSkor/jumToken);
+        //System.out.println("Total skor:"+totalSkor/jumToken);
         //System.out.println("Total skor:"+totalSkorKali/jumToken);
 
-        System.out.println("Total penalti:"+totalPenalti/jumToken);
+        //System.out.println("Total penalti:"+totalPenalti/jumToken);
         //System.out.println("Total penalti:"+totalPenaltiKali/jumToken);
 
         return out;
@@ -651,7 +647,10 @@ public class SimGroupToken {
         //word2vec
         //String strModel ="D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz";
         String strModel ="D:\\eksperimen\\baroni_vector\\EN-wform.w.5.cbow.neg10.400.subsmpl_v_spasi.txt";
-        sgt = new SimGroupToken(0,strModel,par);
+        Prepro pp = new Prepro();
+        pp.loadStopWords("stopwords2","kata");
+        sgt = new SimGroupToken(0,strModel,par,pp);
+        //sgt.parameter = par;
 
         ArrayList<String> alKata= new ArrayList<>();
         alKata.add("dagbladet");
@@ -673,12 +672,12 @@ public class SimGroupToken {
         alKata.add("new");
         alKata.add("opponent");
 
-        System.out.println(strModel);
+        //System.out.println(strModel);
         for (String kata: alKata) {
             String nn = sgt.getNearestNeighbor(kata);
-            System.out.println(kata+ ":" + nn);
+            //System.out.println(kata+ ":" + nn);
         }
-        System.out.println("-------------------");
+        //System.out.println("-------------------");
         /*
         String t = "After his release, the clean-shaven Magdy el-Nashar told reporters outside his home that he had " +
                 "nothing to do with the July 7 transit attacks, which killed 52 people and the four bombers.";

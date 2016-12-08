@@ -1,7 +1,12 @@
 package edu.upi.cs.yudiwbs.textualentailment.babakempat;
 
 import com.mysql.fabric.xmlrpc.base.Param;
+import weka.classifiers.trees.j48.C45Split;
+import weka.core.Instances;
+import weka.core.converters.ConverterUtils;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -9,67 +14,41 @@ import java.sql.ResultSet;
 /**
  * Created by yudiwbs on 03/04/2016.IsiWordEmbedUmbc
  *
+ *   
  *   lihat class isiWordEmbedUmbcVer2
  *
  *   tambahan:
  *     - otomatiskan penghitungan parameter untuk data training, lalu ukur akurasinya di data testing
  *
  *
+ *
  */
 
 public class IsiWordUmbcVer3 {
+    double akurasiTerakhir  = 0;
+    String fileArff = "D:\\desertasi\\final\\eksperimen\\out.arff";
     public String namaTabel;
     private Connection conn = null;
     private PreparedStatement pUpd = null;
     private PreparedStatement pSel = null;
 
     ResultSet rs = null;
-    Prepro pp;
+    Prepro pp;                 //Prepro versi stopwords
     SimGroupToken sgt;
 
-    public void cariParameter(String namaTabelTrain) {
-        //loop semua parameter
-        //jalankan klasifikasi
-        //catat akurasi
-        ParameterSimGroupToken par = new ParameterSimGroupToken();
 
-        par.penaltiAngka = 1;  //umbc: 1
-        par.penaltiLokasi = 0.5; //umbc: tdk ada
-        par.penaltiTgl = 0.5;  //umbc: 0.5
-        par.penaltiUang = 0.5; //umbc: 0.5
 
-        par.penaltiKataVerbNoun = 1;  //umbc 1
-        par.penaltiKataLain = 0.5;    //umbc 0.5
-        par.batasPenaltiKata = 0.25;
-        par.penaltiKalNeg = 1;
+    //threshold dicari dengan weka  --> nanti dibuat otomatis
+    //ingat data dari proses umbc adalah satu skor, lalu dengan weka dicari thresholdnya
 
-        double increment = 0.1;
 
-        for (par.penaltiAngka = 0;par.penaltiAngka<=1;par.penaltiAngka = par.penaltiAngka + increment) {
-         for (par.penaltiLokasi = 0;par.penaltiLokasi<=1;par.penaltiLokasi = par.penaltiLokasi + increment) {
-              for (par.penaltiTgl = 0;par.penaltiTgl<=1;par.penaltiTgl= par.penaltiTgl + increment) {
-                  for (par.penaltiUang = 0;par.penaltiUang<=1;par.penaltiUang= par.penaltiUang + increment) {
-                      for (par.penaltiKataVerbNoun = 0;par.penaltiKataVerbNoun<=1;par.penaltiKataVerbNoun= par.penaltiKataVerbNoun + increment) {
-                          for (par.penaltiKataLain = 0;par.penaltiKataLain<=1;par.penaltiKataLain= par.penaltiKataLain + increment) {
-                              for (par.batasPenaltiKata = 0;par.batasPenaltiKata<=1;par.batasPenaltiKata= par.batasPenaltiKata + increment) {
-                                  for (par.penaltiKalNeg = 0;par.penaltiKalNeg<=1;par.penaltiKalNeg= par.penaltiKalNeg + increment) {
-                                      System.out.println(par);
-                                  }
-                              }
-                          }
-                      }
-                    }
-                }
-            }
-        }
-    }
-
-    //threshold dicari dengan weka  -->
-    public void klasifikasi(double threshold,String namaTabelTest, ParameterSimGroupToken par) {
+    //ambil data t,h dari tabel, berdasarkan threshold an parameter lalu menghitung akurasi
+    //tidak efisien juga kalau baru memanggil proses
+    public void klasifikasi(double threshold, String namaTabelTest) {
         PreparedStatement pSelTest = null;
         String strSelTest = "select id,t,h, t_gram_structure, " +
                 "h_gram_structure,t_ner, h_ner, isEntail " +
-                " from " + namaTabelTest + " #limit 10" ; //ditabatasi dulu sepuluh
+                " from " + namaTabelTest + " #limit 10" ; //
 
         rs = null;
         try {
@@ -95,23 +74,23 @@ public class IsiWordUmbcVer3 {
                 Boolean isEntail = rs.getBoolean(8);
 
                 //debug print
-                System.out.println("");
-                System.out.println("id:"+id);
+                //System.out.println("");
+                //System.out.println("id:"+id);
                 //System.out.println("T:"+t);
                 //System.out.println("H:"+h);
                 //skor_word2vec_verb,skor_word2vec_noun,skor_word2vec_verbHnounT
                 //update skor
                 //double jarak = jarakMaks(t,h,tNer,hNer);
-
+                /*
                 System.out.println("T:"+t);
                 System.out.println("H:"+h);
                 System.out.println("IsEntail:----------->" +
                         ""+isEntail);
-
+                */
                 //isi group token
-                GroupToken gtT = new GroupToken();
+                GroupToken gtT = new GroupToken(pp);
                 gtT.ambilToken(t,tNer);
-                GroupToken gtH = new GroupToken();
+                GroupToken gtH = new GroupToken(pp);
                 gtH.ambilToken(h,hNer);
 
                 //nanti bisa gabung pengisian variabelnya
@@ -125,8 +104,10 @@ public class IsiWordUmbcVer3 {
                 boolean predEntail;
                 predEntail = (jarak>threshold);
 
+                /*
                 System.out.println("Jarak:"+jarak);
                 System.out.println("PredEntail:"+predEntail);
+                */
                 if (isEntail == predEntail) {
                     jumPredCocok++;
                     sb.append(id+","+1);
@@ -136,10 +117,11 @@ public class IsiWordUmbcVer3 {
                 sb.append(System.getProperty("line.separator"));
             }
             System.out.println("Jumlah pred cocok:"+jumPredCocok);
-            System.out.println("Akurasi:"+(double) jumPredCocok/cc);
+            akurasiTerakhir = (double) jumPredCocok/cc;
+            System.out.println("Akurasi:"+akurasiTerakhir);
 
-            System.out.println("Rincian");
-            System.out.println(sb.toString());
+            //System.out.println("Rincian");
+            //System.out.println(sb.toString());
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -147,19 +129,52 @@ public class IsiWordUmbcVer3 {
     }
 
     /**
+     *  - inisisasi database
+     *  - inisiasi simGroupToken (yang membandingkan tingkat kemiripan antara dua token)
      *
-     * @param vnamaTabel
-     * @param kolomTujuan   kolom sudah dicreate di tabel
-     * @param gloveOrW2vec  0: glove, 1: w2vec
-     * @param fileVector
+     *
      */
-    public void init(String vnamaTabel, String kolomTujuan, int gloveOrW2vec, String fileVector, ParameterSimGroupToken param) {
 
-        namaTabel = vnamaTabel;
-        KoneksiDB db = new KoneksiDB();
+    //parameter dipisahkan
+    //jangan lupa panggil juga initDB
+    public void init(int gloveOrW2vec, String fileVector ) {
         pp = new Prepro();
         pp.loadStopWords("stopwords","kata");
         //skor_word2vec_verb,skor_word2vec_noun,skor_word2vec_verbHnounT
+
+
+        //paling akhir, karena lama
+        //paragram sl999: lebih bagus pada hasil testing
+
+        //word2vec
+        //sgt = new SimGroupToken(1,"D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz");
+        //ParameterSimGroupToken par = new ParameterSimGroupToken();
+        //hati2 ini initnya load model, bisa gede dan lama, jangan dipanggil berulang2
+        //Prepro pp = new Prepro();
+        //pp.loadStopWords("stopwords2","kata");
+        sgt = new SimGroupToken(gloveOrW2vec,fileVector,null,pp);  //par diisi dalam loop
+
+
+        //glovec
+        //sgt = new SimGroupToken(0,"D:\\eksperimen\\paragram\\paragram_300_sl999\\paragram_300_sl999\\paragram_300_sl999.txt");
+        //sgt = new SimGroupToken(0,"D:\\eksperimen\\paragram\\paragram_300_ws353\\paragram_300_ws353\\paragram_300_ws353.txt");
+        //sgt = new SimGroupToken(0,"D:\\eksperimen\\glove\\glove.6B.300d.txt");
+
+        //System.out.println("Menggunakan W2Vec");
+
+        //batas terendah sebelum kena penalti
+    }
+
+    @Override
+    public void finalize() {
+        closeDB();
+    }
+
+
+    public void initDB(String vnamaTabel, String kolomTujuan) {
+        akurasiTerakhir = 0;
+        namaTabel = vnamaTabel;
+        KoneksiDB db = new KoneksiDB();
         try {
             conn = db.getConn();
             //jika sudah ada isi lagi (dikomentari yg bagian is null)
@@ -175,33 +190,9 @@ public class IsiWordUmbcVer3 {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-
-        //paling akhir, karena lama
-
-        //
-        //paragram sl999: lebih bagus pada hasil testing
-
-        //word2vec
-        //sgt = new SimGroupToken(1,"D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz");
-
-        sgt = new SimGroupToken(gloveOrW2vec,fileVector,param);
-
-        //glovec
-        //sgt = new SimGroupToken(0,"D:\\eksperimen\\paragram\\paragram_300_sl999\\paragram_300_sl999\\paragram_300_sl999.txt");
-        //sgt = new SimGroupToken(0,"D:\\eksperimen\\paragram\\paragram_300_ws353\\paragram_300_ws353\\paragram_300_ws353.txt");
-        //sgt = new SimGroupToken(0,"D:\\eksperimen\\glove\\glove.6B.300d.txt");
-
-        //System.out.println("Menggunakan W2Vec");
-
-        //batas terendah sebelum kena penalti
     }
 
-    @Override
-    public void finalize() {
-        close();
-    }
-
-    public void close() {
+    public void closeDB() {
         try {
             pSel.close();
             pUpd.close();
@@ -214,11 +205,31 @@ public class IsiWordUmbcVer3 {
         }
     }
 
+    /*
+           loop setiap pasang T-H di tabel
+           hitung skor jarak
+           modifikasi: tidak tulis ke tabel tapi tulis ke file format arff
 
+           @relation 'multiparam'
+
+           @attribute is_Entail {TRUE,FALSE}
+           @attribute data numeric
+
+           @data
+           TRUE,1,1,1,1,1,1,1
+
+     */
     public void proses() {
+
+
         rs = null;
         try {
             rs = pSel.executeQuery();
+            PrintWriter pw = new PrintWriter(fileArff);
+            pw.println("@relation 'multiparam'");
+            pw.println("@attribute is_Entail {true,false}");
+            pw.println("@attribute data numeric");
+            pw.println("@data");
             while (rs.next()) {
                 //id,t,h, t_gram_structure, h_gram_structure
                 int id = rs.getInt(1);
@@ -231,23 +242,25 @@ public class IsiWordUmbcVer3 {
                 Boolean isEntail = rs.getBoolean(8);
 
                 //debug print
-                System.out.println("");
-                System.out.println("id:"+id);
+                //System.out.println("");
+                //System.out.println("id:"+id);
                 //System.out.println("T:"+t);
                 //System.out.println("H:"+h);
                 //skor_word2vec_verb,skor_word2vec_noun,skor_word2vec_verbHnounT
                 //update skor
                 //double jarak = jarakMaks(t,h,tNer,hNer);
 
+                /*
                 System.out.println("T:"+t);
                 System.out.println("H:"+h);
                 System.out.println("IsEntail:----------->" +
                         ""+isEntail);
+                */
 
                 //isi group token
-                GroupToken gtT = new GroupToken();
-                gtT.ambilToken(t,tNer);
-                GroupToken gtH = new GroupToken();
+                GroupToken gtT = new GroupToken(pp);
+                gtT.ambilToken(t,tNer);           //tNer dan hNer diambil dari database (sudah diproses sebelumnya)
+                GroupToken gtH = new GroupToken(pp);
                 gtH.ambilToken(h,hNer);
 
                 //nanti bisa gabung pengisian variabelnya
@@ -255,16 +268,40 @@ public class IsiWordUmbcVer3 {
                 sgt.setTH(t,h);
                 sgt.setPosTag(tSynTree,hSynTree);
                 double jarak = sgt.getSim();
-                System.out.println("Jarak:"+jarak);
+                //System.out.println("Jarak:"+jarak);
 
+                /*
                 pUpd.setDouble(1, jarak);
                 pUpd.setLong(2, id);
                 pUpd.executeUpdate();
+                */
 
+                //TRUE,1,1,1,1,1,1,1
+                pw.println(isEntail+","+jarak);
             }
+            pw.close();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    public double hitungThreshold() {
+        double t = 0;
+        Instances ins = null;
+        try {
+            ins = ConverterUtils.DataSource.read(fileArff);
+            //if (ins.classIndex() == -1)
+            //    ins.setClassIndex(result.numAttributes() - 1);
+            ins.setClassIndex(0);
+            C45Split split=new C45Split(1, 0, ins.sumOfWeights(), true);
+            split.buildClassifier(ins);
+            t = split.splitPoint();
+            System.out.println("threshold:"+t);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return t;
     }
 
 
@@ -276,9 +313,81 @@ public class IsiWordUmbcVer3 {
         //6B tokens, 400K vocab, uncased, 50d, 100d, 200d, & 300d
         //String str6 ="D:\\eksperimen\\glove\\glove.6B.300d.txt";
         //42B tokens, 1.9M vocab, uncased, 300d vectors, hasil kurang
-        //String str42 = "D:\\eksperimen\\glove\\glove.42B.300d\\glove.42B.300d.txt";
+        //ambbil yang terbaik
+
+
+        String glove42 = "D:\\eksperimen\\glove\\glove.42B.300d.txt";
 
         IsiWordUmbcVer3 iw = new IsiWordUmbcVer3();
+        iw.init(0,glove42);
+        //iw.initDB("rte3_babak2","skor_des_multiparam");
+        //DEBUG biar cepet
+        //iw.init("rte3_babak2","skor_des_multiparam ",0,str6);
+
+
+        //kalau klasifikasi, proses dimatikan
+        //memberikan skor untuk setiap pasangan T-H
+        //loop parameternya harusnya disini
+        //iw.sgt.
+
+        //parameter harus di loop disini
+        String namaFileHasil = "D:\\desertasi\\final\\eksperimen\\hasil.csv";
+        try (PrintWriter pwHasil = new PrintWriter(namaFileHasil)) {
+            ParameterSimGroupToken par = new ParameterSimGroupToken();
+            iw.sgt.setParam(par); //idealnya tidak diakses langsung, tapi biarlah.. hehe
+            double increment = 0.25;
+            for (par.penaltiAngka = 0;par.penaltiAngka<=1;par.penaltiAngka = par.penaltiAngka + increment) {
+                for (par.penaltiLokasi = 0;par.penaltiLokasi<=1;par.penaltiLokasi = par.penaltiLokasi + increment) {
+                    for (par.penaltiTgl = 0;par.penaltiTgl<=1;par.penaltiTgl= par.penaltiTgl + increment) {
+                        for (par.penaltiUang = 0;par.penaltiUang<=1;par.penaltiUang= par.penaltiUang + increment) {
+                            for (par.penaltiKataVerbNoun = 0;par.penaltiKataVerbNoun<=1;par.penaltiKataVerbNoun= par.penaltiKataVerbNoun + increment) {
+                                for (par.penaltiKataLain = 0;par.penaltiKataLain<=1;par.penaltiKataLain= par.penaltiKataLain + increment) {
+                                    for (par.batasPenaltiKata = 0;par.batasPenaltiKata<=1;par.batasPenaltiKata= par.batasPenaltiKata + increment) {
+                                        for (par.penaltiKalNeg = 0;par.penaltiKalNeg<=1;par.penaltiKalNeg= par.penaltiKalNeg + increment) {
+                                            iw.initDB("rte3_babak2","skor_des_multiparam");
+
+                                            System.out.println("-------------");
+
+                                            System.out.println("Parameter:");
+                                            System.out.println(par);
+                                            System.out.println("Mulai proses jarak");
+                                            iw.proses();  //dengan param yang berbeda utk setiap iterasi
+                                            //FS: data tersimpan di tabel
+                                            double threshold = iw.hitungThreshold();
+                                            System.out.println("Threshold:"+threshold);
+                                            System.out.println("Mulai proses menghitung akurasi klasifikasi");
+                                            iw.klasifikasi(threshold,"rte3_test_gold");
+                                            //iw.klasifikasi(threshold,par);
+                                            System.out.println("-------------");
+                                            System.out.println("");
+                                            // panggil weka
+                                            // panggil klasfikasi
+                                            //debug stop dulu
+                                            //System.exit(0);
+                                            iw.closeDB();
+                                            pwHasil.println(par.penaltiAngka+","+par.penaltiLokasi+","+
+                                                    par.penaltiTgl+","+par.penaltiUang+","+
+                                                    par.batasPenaltiKata+","+par.penaltiKataVerbNoun+","+
+                                                    par.penaltiKataLain+","+par.batasPenaltiKata+","+
+                                                    par.penaltiKalNeg+","+iw.akurasiTerakhir);
+                                            pwHasil.flush();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            pwHasil.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+
+
+        //iw.klasifikasi(0.542626,"rte3_test_gold");  //glove pargram_sl999
+
         //iw.init("D:\\eksperimen\\glove\\glove.6B.300d.txt","rte3_babak2");
         //iw.init(str840,"rte3_babak2","skor_glove_perkalian_840"); //gagal
         //iw.init("rte3_test_gold","umbc_glove2");
@@ -304,7 +413,7 @@ public class IsiWordUmbcVer3 {
         //iw.init("rte3_babak2","",0,"D:\\eksperimen\\glove\\glove.6B.300d.txt");
         //iw.init("rte3_babak2","juli_glove_42B",0,"D:\\eksperimen\\glove\\glove.42B.300d.txt");  //<-- terbaik
         //iw.init("rte3_babak2","juli_glove_840B",0,"D:\\eksperimen\\glove\\glove.840B.300d.txt");
-        //iw.proses();  //kalau klasifikasi, proses dimatikan
+
 
         /*
         glove:
@@ -333,7 +442,7 @@ public class IsiWordUmbcVer3 {
         //iw.klasifikasi(0.83624,"rte3_test_gold");  //glove_42B   <-- terbaik!
         //iw.klasifikasi(0.776634,"rte3_test_gold"); //glove_840B  <-- berat!
         //iw.klasifikasi(0.637661,"rte3_test_gold"); //w2vec neg
-        iw.close();
+        iw.closeDB();
 
         //iw.init("rte3_babak2","umbc_glove_w2c"); //gabungan antara w2c dan glove (rata2? max? min?)
         //iw.init("rte3_test_gold","umbc_w2v_fix1"); //hanya w2v, tapi berdasarkan fix1

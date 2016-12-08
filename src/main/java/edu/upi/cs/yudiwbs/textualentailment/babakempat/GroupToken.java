@@ -14,10 +14,12 @@ public class GroupToken {
     ArrayList<String> tokenAngka;
     ArrayList<String> tokenLokasi;
 
-    Prepro pp = new Prepro();
+    //Prepro pp = new Prepro();
+    Prepro pp;
 
-    public GroupToken() {
-        pp.loadStopWords("stopwords2","kata");
+    public GroupToken(Prepro pp) {
+        this.pp = pp;
+        //pp.loadStopWords("stopwords2","kata");
     }  //versi stopwords wash.edu plus tambahan
 
     //fs: arraylist para token terisi
@@ -31,28 +33,36 @@ public class GroupToken {
         tokenTgl = (ArrayList<String>) objOut[0];
         String sisaKal = (String) objOut[1];
         //debug
+        /*
         System.out.println("Ambil Tanggal:");
         for (String s:tokenTgl) {
             System.out.println(s);
         }
+        */
 
         objOut = pp.ambilTokenUang(sisaKal,ner);
         tokenUang = (ArrayList<String>) objOut[0];
         sisaKal = (String) objOut[1];
+
+        /*
         System.out.println("Ambil Uang:");
         for (String s:tokenUang) {
             System.out.println(s);
         }
+        */
         //System.out.println("sisa="+sisaKal);
 
         //angka
         objOut = pp.ambilTokenAngka(sisaKal,ner);
         tokenAngka = (ArrayList<String>) objOut[0];
         sisaKal = (String) objOut[1];
+
+        /*
         System.out.println("Ambil Angka:");
         for (String s:tokenAngka) {
             System.out.println(s);
         }
+        */
 
         //lokasi
         /*

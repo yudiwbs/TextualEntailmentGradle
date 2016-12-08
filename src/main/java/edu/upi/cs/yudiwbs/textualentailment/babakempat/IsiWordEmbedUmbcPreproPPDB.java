@@ -53,7 +53,9 @@ public class IsiWordEmbedUmbcPreproPPDB {
         //sgt = new SimGroupToken("D:\\eksperimen\\paragram\\paragram_300_sl999\\paragram_300_sl999\\paragram_300_sl999.txt",
         //        "D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz");
         ParameterSimGroupToken param = new ParameterSimGroupToken();
-        sgt = new SimGroupToken(0,"D:\\eksperimen\\paragram\\paragram_300_sl999\\paragram_300_sl999\\paragram_300_sl999.txt",param);
+        Prepro pp = new Prepro();
+        pp.loadStopWords("stopwords2","kata");
+        sgt = new SimGroupToken(0,"D:\\eksperimen\\paragram\\paragram_300_sl999\\paragram_300_sl999\\paragram_300_sl999.txt",param,pp);
 
         //paragaram ws353
         /*
@@ -133,9 +135,9 @@ public class IsiWordEmbedUmbcPreproPPDB {
                         ""+isEntail);
 
                 //isi group token
-                GroupToken gtT = new GroupToken();
+                GroupToken gtT = new GroupToken(pp);
                 gtT.ambilToken(t,tNer);
-                GroupToken gtH = new GroupToken();
+                GroupToken gtH = new GroupToken(pp);
                 gtH.ambilToken(h,hNer);
 
                 //nanti bisa gabung pengisian variabelnya
