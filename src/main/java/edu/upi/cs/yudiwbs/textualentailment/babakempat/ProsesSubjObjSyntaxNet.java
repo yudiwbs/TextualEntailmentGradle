@@ -6,6 +6,7 @@ import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Scanner;
@@ -820,6 +821,8 @@ public class ProsesSubjObjSyntaxNet {
         try {
             vecGlove = WordVectorSerializer.loadTxtVectors(new File(fileVecGlove));
         } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
     }

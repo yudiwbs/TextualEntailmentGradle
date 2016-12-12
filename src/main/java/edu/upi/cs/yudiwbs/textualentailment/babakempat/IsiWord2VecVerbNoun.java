@@ -1,6 +1,5 @@
 package edu.upi.cs.yudiwbs.textualentailment.babakempat;
 
-import net.didion.jwnl.data.Exc;
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 

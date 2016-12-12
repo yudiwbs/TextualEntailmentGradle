@@ -8,7 +8,7 @@ import java.util.Scanner;
 
 /**
  * lihat ProsesKalimatNegatif
- *
+ * kenapa diberlabel old?
  *
  * Created by yudiwbs on 25/04/2016.
  * mengecek apakah suatu kalimat negatif

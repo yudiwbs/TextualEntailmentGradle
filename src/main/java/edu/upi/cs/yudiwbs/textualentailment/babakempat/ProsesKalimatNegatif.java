@@ -7,6 +7,9 @@ import java.util.Scanner;
 
 /**
  * Created by yudiwbs on 16/06/2016.
+ * untuk apa ini ya?
+ * mengecek apakah kalimat mengandun kata kalimat negatif atau tidak
+ * kalau dibandingkan dengan OLD_cekkalimatne
  */
 public class ProsesKalimatNegatif {
 

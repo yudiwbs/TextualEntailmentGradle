@@ -2,7 +2,6 @@ package edu.upi.cs.yudiwbs.textualentailment.babakempat;
 
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
-import scala.xml.PrettyPrinter;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -51,7 +50,11 @@ public class ProsesRootSyntaxNet {
 
             String fileVecGlove = "D:\\eksperimen\\paragram\\paragram_300_sl999\\paragram_300_sl999\\paragram_300_sl999.txt";
             try {
-                vecGlove = WordVectorSerializer.loadTxtVectors(new File(fileVecGlove));
+                try {
+                    vecGlove = WordVectorSerializer.loadTxtVectors(new File(fileVecGlove));
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }

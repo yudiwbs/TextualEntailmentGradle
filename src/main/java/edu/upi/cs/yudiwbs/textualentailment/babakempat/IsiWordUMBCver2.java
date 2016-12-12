@@ -111,8 +111,8 @@ public class IsiWordUmbcVer2 {
             System.out.println("Jumlah pred cocok:"+jumPredCocok);
             System.out.println("Akurasi:"+(double) jumPredCocok/cc);
 
-            System.out.println("Rincian");
-            System.out.println(sb.toString());
+            //System.out.println("Rincian");
+            //System.out.println(sb.toString());
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -123,7 +123,7 @@ public class IsiWordUmbcVer2 {
      *
      * @param vnamaTabel
      * @param kolomTujuan   kolom sudah dicreate di tabel
-     * @param gloveOrW2vec  0: glove, 1: w2vec
+     * @param gloveOrW2vec  0: model teks  1: w2vec (yg dari google zip)
      * @param fileVector
      */
     public void init(String vnamaTabel, String kolomTujuan, int gloveOrW2vec, String fileVector) {
@@ -158,7 +158,8 @@ public class IsiWordUmbcVer2 {
         ParameterSimGroupToken par = new ParameterSimGroupToken();
         Prepro pp = new Prepro();
         pp.loadStopWords("stopwords2","kata");
-        sgt = new SimGroupToken(1,"D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz",par,pp);
+        //sgt = new SimGroupToken(1,"D:\\eksperimen\\textualentailment\\GoogleNews-vectors-negative300.bin.gz",par,pp);
+        sgt = new SimGroupToken(gloveOrW2vec,fileVector,par,pp);
 
         //glovec
         //sgt = new SimGroupToken(0,"D:\\eksperimen\\paragram\\paragram_300_sl999\\paragram_300_sl999\\paragram_300_sl999.txt");
@@ -280,13 +281,25 @@ public class IsiWordUmbcVer2 {
         //iw.init("rte3_babak2","juli_glove_840B",0,"D:\\eksperimen\\glove\\glove.840B.300d.txt");
         //iw.init("rte3_babak2","juli_w2vec_baroni",0,"D:\\eksperimen\\baroni_vector\\EN-wform.w.5.cbow.neg10.400.subsmpl_v_spasi.txt");
 
-        //iw.proses();  //kalau klasifikasi, proses dimatikan
+        //word2vec_wikien_minword5_layer100_windowsize10
+        iw.init("rte3_babak2","word2vec_wikien_minword5_layer100_windowsize5_cbow",0,
+                "D:\\desertasi\\final\\eksperimen\\model\\word2vec_wikien_minword5_layer100_windowsize5_cbow.txt");
+
+        //iw.proses();  //kalau klasifikasi, proses dimatikan sebaliknya kalau ini nyala, matikan klasifikasi dibawah
+
         /*setelah proses, ambil data pasangan entail dan skor,
             gunakan query:
             select IF(isEntail = 1, "true", "false") as is_Entail, juli_sl999 from rte3_babak2
 
-               pindahkan ke google spreadsheet,
-               jadikan csv, buka
+               jadikan delimited text, copy ke clipboard buka pake ultraedit save ke csv
+               //pindahkan ke google spreadsheet,
+               jadikan csv, buka weka
+               atau langsung pake weka akses ke mysql ya <-- susah kata lia
+
+               jalankan J48, lihat dec treenya
+
+               todo: dibuat otomatis spt halnya wordumbc ver 3
+
         */
         /*
         glove:
@@ -311,13 +324,15 @@ public class IsiWordUmbcVer2 {
         0.55922 juli_w2vec_baroni
 
         */
+        //kalau proses, klasifikasi ditutup
         //iw.klasifikasi(0.542626,"rte3_test_gold");  //glove pargram_sl999
         //iw.klasifikasi(0.774786,"rte3_test_gold"); //glove paragram_ws353
         //iw.klasifikasi(0.836064,"rte3_test_gold");   //glove 6b
         //iw.klasifikasi(0.83624,"rte3_test_gold");  //glove_42B   <-- terbaik!
         //iw.klasifikasi(0.776634,"rte3_test_gold"); //glove_840B  <-- berat!
         //iw.klasifikasi(0.637661,"rte3_test_gold"); //w2vec neg
-        iw.klasifikasi(0.55922,"rte3_test_gold");    //juli_w2vec_baroni
+        //iw.klasifikasi(0.55922,"rte3_test_gold");    //juli_w2vec_baroni
+        iw.klasifikasi(  0.654532,"rte3_test_gold");
         iw.close();
 
         //iw.init("rte3_babak2","umbc_glove_w2c"); //gabungan antara w2c dan glove (rata2? max? min?)

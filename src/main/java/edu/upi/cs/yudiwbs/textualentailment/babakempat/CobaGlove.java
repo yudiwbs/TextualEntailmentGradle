@@ -6,6 +6,7 @@ import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Scanner;
@@ -97,6 +98,8 @@ public class CobaGlove {
             vec = WordVectorSerializer.loadTxtVectors(
                     new File("D:\\eksperimen\\glove\\glove.6B.300d.txt"));
         } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
         System.out.println("load selesai");

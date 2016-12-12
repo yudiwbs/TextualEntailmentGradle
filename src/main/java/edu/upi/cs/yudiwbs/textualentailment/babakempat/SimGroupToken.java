@@ -3,6 +3,7 @@ package edu.upi.cs.yudiwbs.textualentailment.babakempat;
 import com.mdimension.jchronic.Options;
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
+import org.deeplearning4j.models.word2vec.Word2Vec;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -23,6 +24,9 @@ import java.util.regex.Pattern;
  *   fix3: penalti untuk kesamaan lokasi
  *
  *   agt 16: tambah parameter
+ *
+ *   berantakan banget saat menggunakan glove atau word2vec, perlu diperbaiki serius
+ *
  */
 
 public class SimGroupToken {
@@ -31,7 +35,10 @@ public class SimGroupToken {
 
 
     //WordVectors vec;
-    WordVectors vecGlove  = null;
+    //Word2Vec vecWord2Vec = null;
+    //HATI-HATI, NANTI BALIKIN!!!
+
+    Word2Vec  vecGlove  = null;  //hack!! hati2 kalau pake glove benerean
     WordVectors vecW2V  = null;
     int isGloveOrW2vec;
 
@@ -185,13 +192,19 @@ public class SimGroupToken {
         optTime.setCompatibilityMode(true); //untuk apa??
         //opt.setGuess(true); //untuk apa??
 
-        //load vector GLOVE
+        //load vector GLOVE <--- bukan, tapi vektor teks
         if (isGloveOrW2vec==0) {
             try {
-                System.out.println("Mulai Load model Glovec. Mungkin agak lama ...");
+                System.out.println("Mulai Load model teks. Mungkin agak lama ...");
                 //vecW2V = WordVectorSerializer.loadGoogleModel(new File(fileVecW2V), true);
-                vecGlove = WordVectorSerializer.loadTxtVectors(new File(fileVec));
-
+                //vecGlove = WordVectorSerializer.loadTxtVectors(new File(fileVec));
+                //vecWord2Vec = WordVectorSerializer.r
+                //vecGlove = WordVectorSerializer.readWord2Vec()
+                //        readWord2(new File(fileVec));
+                //HATI-HATI!!! UNTUK EKSPERIMEN WORD2VEC INI NAMANYA AJA veGLOVE
+                //TAPI ISISNYA WORD2VEC,
+                //todo: DIPERBAIKI NANTI
+                vecGlove = WordVectorSerializer.readWord2Vec(new File(fileVec));
                 System.out.println("Load selesai... ");
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -204,7 +217,7 @@ public class SimGroupToken {
             //load
             //load vector W2V
             try {
-                System.out.println("Mulai Load model w2vec, agak lama ...");
+                System.out.println("Mulai Load model w2vec zip, agak lama ...");
                 vecW2V = WordVectorSerializer.loadGoogleModel(new File(fileVec), true);
                 System.out.println("Load selesai... ");
             } catch (Exception ex) {
@@ -431,10 +444,18 @@ public class SimGroupToken {
 
                         //System.out.println("Hlem:"+vHlem);
                         //System.out.println("Tlem:"+vTlem);
-
+                        //
+                        //TODO: INI SALAH, word2vec bisa juga tidak dilowercase, case nanti jadi parameter!!
                         double skorEm;
                         if (isGloveOrW2vec==0) {
-                            double skorEmGlove = vecGlove.similarity(vH.toLowerCase().trim(), vT.toLowerCase().trim());
+                            System.out.println(vH.toLowerCase());
+                            System.out.println(vT.toLowerCase());
+                            double skorEmGlove;
+                            try {
+                                skorEmGlove = vecGlove.similarity(vH.toLowerCase().trim(), vT.toLowerCase().trim());
+                            } catch (NullPointerException ex)  {
+                                skorEmGlove = 0; //error null kalau tdk ketemu katanya
+                            }
                             skorEm = skorEmGlove; //glove saja
                         }
                         else {

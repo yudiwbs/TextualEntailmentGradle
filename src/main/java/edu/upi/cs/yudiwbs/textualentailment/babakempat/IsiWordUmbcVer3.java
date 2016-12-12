@@ -14,7 +14,8 @@ import java.sql.ResultSet;
 /**
  * Created by yudiwbs on 03/04/2016.IsiWordEmbedUmbc
  *
- *   
+ *   untuk mencari konfigurasi penalti terbaik!
+ *
  *   lihat class isiWordEmbedUmbcVer2
  *
  *   tambahan:
@@ -25,7 +26,7 @@ import java.sql.ResultSet;
  */
 
 public class IsiWordUmbcVer3 {
-    double akurasiTerakhir  = 0;
+    double akurasiTerakhir  = 0;  //untuk apa jadi var global?
     String fileArff = "D:\\desertasi\\final\\eksperimen\\out.arff";
     public String namaTabel;
     private Connection conn = null;
@@ -37,9 +38,6 @@ public class IsiWordUmbcVer3 {
     SimGroupToken sgt;
 
 
-
-    //threshold dicari dengan weka  --> nanti dibuat otomatis
-    //ingat data dari proses umbc adalah satu skor, lalu dengan weka dicari thresholdnya
 
 
     //ambil data t,h dari tabel, berdasarkan threshold an parameter lalu menghitung akurasi
@@ -120,6 +118,7 @@ public class IsiWordUmbcVer3 {
             akurasiTerakhir = (double) jumPredCocok/cc;
             System.out.println("Akurasi:"+akurasiTerakhir);
 
+            //debug
             //System.out.println("Rincian");
             //System.out.println(sb.toString());
 
@@ -220,8 +219,6 @@ public class IsiWordUmbcVer3 {
 
      */
     public void proses() {
-
-
         rs = null;
         try {
             rs = pSel.executeQuery();

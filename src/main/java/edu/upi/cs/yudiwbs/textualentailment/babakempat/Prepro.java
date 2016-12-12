@@ -42,7 +42,9 @@ public class Prepro {
      */
     public void initPosTagDep() {
         //panggil sebelum lakukan parsing syntatic dan dependency
-        lp = new LexicalizedParser("edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz","-maxLength", "80", "-retainTmpSubcategories");
+        //todo: kenapa error
+        //lp = new LexicalizedParser("edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz","-maxLength", "80", "-retainTmpSubcategories");
+        lp = null; //biar kalo error ketahuan
     }
 
     public String[] parsePosTagDep(String sen) {
@@ -55,7 +57,9 @@ public class Prepro {
         String[] out = new String[2];
         String kata = sen;
 
-        Tree parseTree = lp.apply(kata);
+        //todo: perbaiki nanti
+        //Tree parseTree = lp.apply(kata);
+        Tree parseTree  = null;  //biar error sekalian
         TreebankLanguagePack tlp = new PennTreebankLanguagePack();
         GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory();
         GrammaticalStructure gs = gsf.newGrammaticalStructure(parseTree);
